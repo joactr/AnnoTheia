@@ -1,0 +1,11 @@
+imgs/
+mfccs/
+npz/
+exps/
+outputs/
+inputs/
+*.bat
+*.wav
+*.mp4
+*.zip
+*.ui
