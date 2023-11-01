@@ -4,6 +4,7 @@ npz/
 exps/
 outputs/
 inputs/
+__pycache__/
 *.bat
 *.wav
 *.mp4
