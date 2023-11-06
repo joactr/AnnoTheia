@@ -1,5 +1,6 @@
 import subprocess
 import os
+import glob
 import cv2
 from math import floor,ceil
 import torch
@@ -7,6 +8,27 @@ import torch.nn.functional as F
 import random
 import numpy as np
 from collections import defaultdict
+from scenedetect import detect, ContentDetector, split_video_ffmpeg
+
+
+def getVideoScenes(videoPath):
+    # Detect scenes in the video
+    scene_list = detect(videoPath, ContentDetector())
+    temp_folder = "./temp/"
+    os.makedirs(temp_folder, exist_ok=True)
+    os.chdir(temp_folder)
+    # Split the video into scenes and save them
+    split_video_ffmpeg(f".{videoPath}", scene_list)
+    os.chdir("..")
+    # If no scenes were detected, return the original video path
+    if len(scene_list) == 0:
+        video_list  = [videoPath]
+        #scene_timestamps = [(0,checkVideoDuration(videoPath))]
+    else:
+        video_list = glob.glob(temp_folder+"/*")
+        #scene_timestamps = [(timestamp[0].get_frames(), timestamp[1].get_frames()) for timestamp in scene_list]
+    return video_list
+
 
 
 def convert_video_to_audio_ffmpeg(video_file, output_ext="wav"):
@@ -229,3 +251,63 @@ def padAudio(audio, label, center,nframes,videoFrames):
     audio = audio[ini:fin]
 
     return audio # (T,96,96)
+
+######################
+### VIDEO CREATION ###
+######################
+
+def createVideo(videoName,imgFrames,audioPath,width,height):
+    video = cv2.VideoWriter("output.mp4", 0, 25, (width,height))
+    for image in imgFrames:
+        video.write(image)
+    cv2.destroyAllWindows()
+    video.release()
+    subprocess.call(["ffmpeg","-y","-i",os.getcwd()+f"/output.mp4","-i",audioPath,"-map","0:v","-map","1:a", "-c:v", "copy", "-shortest", os.getcwd()+f"/outputs/videos/{videoName}"],
+                    stdout=subprocess.DEVNULL)
+    os.remove(os.getcwd()+f"/output.mp4")
+    
+# Returns a list of [start,end] timestamps in seconds of the parts where a speaker is speaking with minimum length of minLength frames
+def getSpeaking(arr,minLength,fps):
+    prev_idx = 0
+    posFrames = 0
+    idx_list = []
+    for i,num in enumerate(arr):
+        if num == 1:
+            posFrames +=1
+        else:
+            if i-prev_idx >= minLength:
+                idx_list.append((prev_idx/fps,i/fps))
+            prev_idx = i
+            posFrames = 0
+    return idx_list
+
+def saveFullVideo(videoName, inputVideo, audioPath, totalScores, faceFrames, predArray, facePos):
+    cap = cv2.VideoCapture(inputVideo)
+    videoImages = []
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    while True:
+        ret, image = cap.read()
+        videoImages.append(image)
+        if ret == False:
+            break
+
+    for speakerN in totalScores.keys():
+        for i, fr in enumerate(faceFrames[speakerN]): # FOR EACH FRAME WHERE THE FACE IS SHOWING
+            try:
+                image = videoImages[fr]
+                greenValue = int(255*predArray[speakerN][i])
+                redValue = 255-greenValue
+                color = (0,greenValue,redValue)
+                #print(color)
+                xmin,ymin,xmax,ymax = facePos[speakerN][i]
+                image = cv2.rectangle(image, (xmin,ymin), (xmax,ymax),color , 1)
+                cv2.putText(image, "{:.2f}".format(totalScores[speakerN][i]*100), (xmin, ymin-5), cv2.FONT_HERSHEY_SIMPLEX, 0.35, color, 1)
+            except:
+                pass
+    cap.release()
+    cv2.destroyAllWindows()
+    
+    
+    createVideo(videoName,videoImages,audioPath,width,height)

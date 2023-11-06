@@ -1,8 +1,8 @@
 {
-    "inputVideo": "./inputs/dos_personas_hablando_por_turnos.mp4",
+    "inputVideo": "./inputs/testVideo.mp4", 
     "minLength": 12,
     "threshold": 0.04,
-    "outputVideo": "False",
+    "outputVideo": "True",
     "model": "",
     "windowSize": 51,
     "whisperLang": "auto",
