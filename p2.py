@@ -18,7 +18,8 @@ config = json.load(config_file)
 detector = face_detection.build_detector(
 "DSFDDetector", confidence_threshold=.3, nms_iou_threshold=.5) #DSFDDetector
 model = talkNet()
-model.load_state_dict(torch.load("./weights/model51_0004.model"))
+checkpoint_name = 'model51_0004.model'
+model.load_state_dict(torch.load(os.path.join('weights',checkpoint_name)))
 transcription_model = whisper.load_model("small")
 
 windowSize = config.get("windowSize", 51)
@@ -31,14 +32,20 @@ thr = config.get("threshold", 0.04)
 
 videoPath = config.get("inputVideo")
 
+os.makedirs("outputs/videos", exist_ok=True)
+os.makedirs("outputs/pickles", exist_ok=True)
 
 
+output_samples = []
 
-video_list = tools.getVideoScenes(videoPath)
+video_list, scene_list = tools.getVideoScenes(videoPath)
 
-for inputVideo in video_list:
-
+# ANALYZE EACH SEPARATE VIDEO
+for inputVideo, (video_start,video_end) in zip(video_list,scene_list):
     videoDuration = tools.checkVideoDuration(inputVideo)
+    #######
+    # CONVERT VIDEO TO 25FPS AND 100HZ OF AUDIO SAMPLING (FFMPEG)
+    #######
     videoFrames = int(videoDuration*25)
     fps = 25
     # Load and process video
@@ -100,14 +107,9 @@ for inputVideo in video_list:
     videoName = str(path.split(os.sep)[-1])
 
     if config.get("outputVideo", "False") == "True": 
-        os.makedirs("outputs/videos", exist_ok=True)
         tools.saveFullVideo(videoName, inputVideo, audioPath, totalScores, faceFrames, predArray, facePos)
 
     # SAVE VIDEO DATA
-    # USE ONLY AUDIO FRAGMENT FOR THE SPEAKER
-    os.makedirs("outputs/pickles", exist_ok=True)
-    
-
     if config.get("whisperLang", "auto") == "auto":
         transcription = transcription_model.transcribe(audioPath, verbose=False, word_timestamps=True)
     else:
@@ -123,22 +125,23 @@ for inputVideo in video_list:
         for w in seg["words"]:
             wordArr.append(w["word"])
             alignArr.append((w["start"],w["end"]))
-    pdRows = []
-
-    alignMargin = 0.5 # Margin in seconds for word alignment
+    
+    # EXTRACT VALID SCENES AND ALIGN TRANSCRIPTION
+    align_margin = 0.1
     for speakerN in totalScores.keys():
         for (ini,end) in tools.getSpeaking(predArray[speakerN],config.get("minLength", 12),25):
             iniW, endW = -1, -1
             for i, (alignIni, alignEnd) in enumerate(alignArr):
-                alignIni -= alignMargin
-                alignEnd += alignMargin
-                if iniW == -1 and ini <= alignEnd and ini >= alignIni-0.3:
+                if ini-align_margin <= alignEnd and ini >= alignIni:
                     iniW = i
-                if endW == -1 and end <= alignEnd and end >= alignIni-0.3:
+                if alignEnd+align_margin <= end:
                     endW = i
             if iniW > -1 and endW > -1:
-                newRow = {'video':inputVideo, 'speaker':speakerN, 'ini': ini, 'end':end, 'dataPath': "outputs/npz/"+videoName+".pkl", 'transcription':''.join(wordArr[iniW:endW+1])}
-                pdRows.append(newRow)
+                newRow = {'video':videoPath, 'speaker':speakerN, 'ini': video_start+ini, 'end':video_start+end,
+                            'dataPath': "outputs/npz/"+videoName+".pkl", 'transcription':''.join(wordArr[iniW:endW+1])}
+                output_samples.append(newRow)
+    
+    os.remove(inputVideo)
 
-    df = pd.DataFrame(pdRows,columns=['video', 'speaker', 'ini', 'end', 'dataPath', 'transcription'])
-    df.to_csv(r"outputs/res.csv")
+df = pd.DataFrame(output_samples,columns=['video', 'speaker', 'ini', 'end', 'dataPath', 'transcription'])
+df.to_csv(r"outputs/res.csv")

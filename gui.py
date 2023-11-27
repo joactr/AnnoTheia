@@ -91,8 +91,19 @@ class Loader():
             loaded = pickle.load(f) # serialize the list
         facePos = loaded["facePos"][speakerN]
         videoPath = row["video"]
-
+        ############
+        # CONVERT VIDEO TO 25FPS
+        # USE TIMESTAMPS TO CUT VIDEO AND OBTAIN ONLY RELEVANT PART (FFMPEG)
+        #        subprocess.call([
+        #     "ffmpeg",
+        #     "-y",
+        #     "-ss", startTime,
+        #     "-t", str(duration),
+        #     "-i", source_path,
+        #     output_mp4_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        #############
         cap = cv2.VideoCapture(videoPath)
+        
         videoImages = []
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -131,7 +142,8 @@ class Loader():
             video.write(image)
         cv2.destroyAllWindows()
         video.release()
-        res = subprocess.call(["ffmpeg","-y","-i","temp.mp4","-i","temp.wav","-map","0:v","-map","1:a", "-c:v", "copy", "-shortest","temp2.mp4"])
+        res = subprocess.call(["ffmpeg", "-loglevel", "quiet","-y","-i","temp.mp4",
+                               "-i","temp.wav","-map","0:v","-map","1:a", "-c:v", "copy", "-shortest","temp2.mp4"])
 
 
 class App(customtkinter.CTk):

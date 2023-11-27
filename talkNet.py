@@ -19,7 +19,6 @@ class talkNet(nn.Module):
         print(time.strftime("%m-%d %H:%M:%S") + " Model para number = %.2f"%(sum(param.numel() for param in self.model.parameters()) / 1024 / 1024))
 
     def forward(self,x):
-        print("AAAAAAAAAAAAAAAAAAAAA")
         with torch.no_grad():
             audioFeature, visualFeature = x
             audioEmbed = self.model.forward_audio_frontend(audioFeature.cuda()) # feedForward

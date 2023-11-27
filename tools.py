@@ -23,11 +23,11 @@ def getVideoScenes(videoPath):
     # If no scenes were detected, return the original video path
     if len(scene_list) == 0:
         video_list  = [videoPath]
-        #scene_timestamps = [(0,checkVideoDuration(videoPath))]
+        scene_list = [(0,checkVideoDuration(videoPath))]
     else:
         video_list = glob.glob(temp_folder+"/*")
-        #scene_timestamps = [(timestamp[0].get_frames(), timestamp[1].get_frames()) for timestamp in scene_list]
-    return video_list
+        scene_list = [(timestamp[0].get_seconds(), timestamp[1].get_seconds()) for timestamp in scene_list]
+    return video_list, scene_list
 
 
 
@@ -36,9 +36,9 @@ def convert_video_to_audio_ffmpeg(video_file, output_ext="wav"):
     #filename, ext = os.path.splitext(video_file)
     filename = os.path.basename(os.path.realpath(video_file))
     filename = filename.split(r'/|\\')[-1]
-    print(filename)
     #Gets working directory and extracts audio
-    subprocess.call(["ffmpeg","-y","-i",video_file,"-vn","-ac","1","-ar","16000","-acodec", "pcm_s16le",  os.getcwd()+f"/{filename}.{output_ext}"],
+    subprocess.call(["ffmpeg","-y","-i",video_file,"-vn","-ac","1","-ar","16000","-acodec",
+                      "pcm_s16le", "-loglevel", "quiet",  os.getcwd()+f"/{filename}.{output_ext}"],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.STDOUT)
     return os.getcwd()+f"/{filename}.{output_ext}" #Nombre del audio
@@ -66,7 +66,6 @@ def extractBiggestFace(img,detector):
         resImage = cv2.cvtColor(resImage, cv2.COLOR_BGR2GRAY)
         return resImage, (xmin,ymin,xmax,ymax)
     except:
-        print(cntr)
         cv2.imshow('image',img)
         cv2.waitKey(0)
 
@@ -88,7 +87,6 @@ def extractFaces(img,detector):
             faceCoords.append((xmin,ymin,xmax,ymax))
         return faces, faceCoords
     except:
-        print(cntr)
         cv2.imshow('image',img)
         cv2.waitKey(0)
 
@@ -157,9 +155,9 @@ def splitVideo(videoPath,splitDuration,videoDuration, outputDir="splitVideos"):
     else:
         outputPath = outputDir
     for i in range(nSplits):
-        subprocess.call(["ffmpeg","-y","-i",videoPath,"-ss",str(splitDuration*i), "-t",str(splitDuration),  f"{outputPath}/{i}.mp4"],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.STDOUT)
+        subprocess.call(["ffmpeg","-y","-i",videoPath,"-ss",str(splitDuration*i),
+                          "-t",str(splitDuration),  f"{outputPath}/{i}.mp4", "-loglevel", "quiet"],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
         splitIni += splitDuration
 
 
@@ -203,7 +201,7 @@ def randomNoOverlap(videoCenter, videoLen, treshold, nSideFrames):
 
 def padVideo(video, center, nframes):
     nSideFrames = int((nframes-1)/2)
-    video = torch.FloatTensor(video)
+    video = torch.FloatTensor(np.array(video))
     videoFrames = video.shape[0]
     #print(videoFrames)
     ini = center-nSideFrames
@@ -257,29 +255,35 @@ def padAudio(audio, label, center,nframes,videoFrames):
 ######################
 
 def createVideo(videoName,imgFrames,audioPath,width,height):
-    video = cv2.VideoWriter("output.mp4", 0, 25, (width,height))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v') # or 'XVID' or 'H264'
+    video = cv2.VideoWriter("output.mp4", fourcc, 25, (width,height))
     for image in imgFrames:
         video.write(image)
     cv2.destroyAllWindows()
     video.release()
-    subprocess.call(["ffmpeg","-y","-i",os.getcwd()+f"/output.mp4","-i",audioPath,"-map","0:v","-map","1:a", "-c:v", "copy", "-shortest", os.getcwd()+f"/outputs/videos/{videoName}"],
-                    stdout=subprocess.DEVNULL)
+    subprocess.call(["ffmpeg","-y","-i",os.getcwd()+f"/output.mp4","-i",audioPath,"-map","0:v","-map","1:a",
+                      "-c:v", "copy", "-shortest", os.getcwd()+f"/outputs/videos/{videoName}", "-loglevel", "quiet"],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     os.remove(os.getcwd()+f"/output.mp4")
     
 # Returns a list of [start,end] timestamps in seconds of the parts where a speaker is speaking with minimum length of minLength frames
-def getSpeaking(arr,minLength,fps):
-    prev_idx = 0
-    posFrames = 0
-    idx_list = []
-    for i,num in enumerate(arr):
-        if num == 1:
-            posFrames +=1
-        else:
-            if i-prev_idx >= minLength:
-                idx_list.append((prev_idx/fps,i/fps))
-            prev_idx = i
-            posFrames = 0
-    return idx_list
+def getSpeaking(arr, minLength, fps):
+   prev_idx = 0
+   posFrames = 0
+   idx_list = []
+   for i, num in enumerate(arr):
+       if num == 1:
+           posFrames += 1
+           if i == len(arr) - 1 or arr[i+1] == 0: # Check if this is the end of a sequence
+               if i-prev_idx + 1 >= minLength: # +1 because the sequence includes the current index
+                  idx_list.append((prev_idx/fps, (i+1)/fps)) # +1 because the sequence includes the current index
+               prev_idx = i + 1 # Move to the next index
+       else:
+           if i-prev_idx >= minLength:
+               idx_list.append((prev_idx/fps,i/fps))
+           prev_idx = i + 1 # Move to the next index
+           posFrames = 0
+   return idx_list
 
 def saveFullVideo(videoName, inputVideo, audioPath, totalScores, faceFrames, predArray, facePos):
     cap = cv2.VideoCapture(inputVideo)
