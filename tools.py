@@ -56,8 +56,6 @@ def extractBiggestFace(img,detector):
         if area > area_max: #Comprobamos si la cara es la más grande
             idx_max = i
             area_max = area
-            #print(area,idx_max)
-        #cv2.rectangle(img, (xmin, ymin), (xmax, ymax), (0, 0, 255), 2)
 
     cntr = detections[idx_max]
     try:

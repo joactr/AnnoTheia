@@ -136,12 +136,14 @@ for inputVideo, (video_start,video_end) in zip(video_list,scene_list):
                     iniW = i
                 if alignEnd+align_margin <= end:
                     endW = i
+            
             if iniW > -1 and endW > -1:
                 newRow = {'video':videoPath, 'speaker':speakerN, 'ini': video_start+ini, 'end':video_start+end,
-                            'dataPath': "outputs/npz/"+videoName+".pkl", 'transcription':''.join(wordArr[iniW:endW+1])}
+                            'dataPath': "outputs/npz/"+videoName+".pkl", 'transcription':''.join(wordArr[iniW:endW+1]),
+                            'scene_start': video_start}
                 output_samples.append(newRow)
     
     os.remove(inputVideo)
 
-df = pd.DataFrame(output_samples,columns=['video', 'speaker', 'ini', 'end', 'dataPath', 'transcription'])
-df.to_csv(r"outputs/res.csv")
+df = pd.DataFrame(output_samples,columns=['video', 'speaker', 'ini', 'end', 'dataPath', 'transcription', 'scene_start'])
+df.to_csv(os.path.join("outputs","res.csv"))

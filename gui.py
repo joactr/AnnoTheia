@@ -2,9 +2,8 @@ import tkinter as tk
 import tkinter.messagebox
 import customtkinter
 from tkvideo import tkvideo
-import vlc
+import vlc, os, cv2
 import pandas as pd
-import cv2
 import pickle
 import subprocess
 
@@ -43,8 +42,6 @@ class Screen(tk.Frame):
         self.player.stop()
 
     def playpause(self):
-        print(self.player.is_playing())
-        #print(self.player.get_position())
         self.player.pause()
 
         if self.player.get_length() - 350 < self.player.get_time():
@@ -76,86 +73,68 @@ class Screen(tk.Frame):
             self.player.set_time(newTime)
         
 
-
-
 class Loader():
     def __init__(self):
         self.df = pd.read_csv("outputs/res.csv")
         self.index = 0
+        self.tmp_path = "./temp"
         self.createVideo()
-
+        
     def createVideo(self):
         row = self.df.iloc[self.index]
         speakerN = row["speaker"]
         with open(row["dataPath"], 'rb') as f:  # open a text file
             loaded = pickle.load(f) # serialize the list
         facePos = loaded["facePos"][speakerN]
-        videoPath = row["video"]
-        ############
-        # CONVERT VIDEO TO 25FPS
-        # USE TIMESTAMPS TO CUT VIDEO AND OBTAIN ONLY RELEVANT PART (FFMPEG)
-        #        subprocess.call([
-        #     "ffmpeg",
-        #     "-y",
-        #     "-ss", startTime,
-        #     "-t", str(duration),
-        #     "-i", source_path,
-        #     output_mp4_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         #############
-        cap = cv2.VideoCapture(videoPath)
-        
+        # CONVERT VIDEO TO 25FPS
+        #############
+        # Cut appropiate segment for sample
+        segment_path = os.path.join(self.tmp_path,f'{self.index}_{row["ini"]}_{row["end"]}.mp4')
+        command = f'ffmpeg -y -ss {row["ini"]} -to {row["end"]} -i {row["video"]} -c:v libx264 -c:a aac {segment_path} -loglevel quiet'
+        subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        cap = cv2.VideoCapture(segment_path)
         videoImages = []
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        iniFrame = int(row["ini"]*25)
+        iniFrame = int((row["ini"]-row["scene_start"])*25)
+        
         frameN = iniFrame
         finalFrame = int(row["end"]*25)
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frameN-1)
 
-        print(frameN, finalFrame)
         while frameN < finalFrame:
-            ret, image = cap.read()
-            videoImages.append(image)
-            frameN+=1
-            if ret == False:
+            try:
+                ret, image = cap.read()
+                color = (0,255,0)
+                xmin,ymin,xmax,ymax = facePos[frameN]
+                videoImages.append(cv2.rectangle(image, (xmin,ymin), (xmax,ymax),color , 1))
+                frameN+=1
+                if ret == False:
+                    break
+            except Exception as e:
+                print("ERROR--------------",frameN, len(facePos))
                 break
 
-        for i, fr in enumerate(range(iniFrame, finalFrame)): #Para cada frame en el que aparezca la cara
-            try:
-                color = (0,255,0)
-                xmin,ymin,xmax,ymax = facePos[fr]
-                videoImages[i] = cv2.rectangle(videoImages[i], (xmin,ymin), (xmax,ymax),color , 1)     
-            except Exception as e :
-                pass
+        self.saveTrimmedVideo(videoImages,width,height,segment_path)
 
-        command = ["ffmpeg","-y","-i",str(videoPath),"-ss",str(row["ini"]),"-to",str(row["end"]),"-q:a","0","-map", "a", "temp.wav"]
-        subprocess.call(command)
-
-        self.saveTrimmedVideo(videoImages,width,height)
-
-    def saveTrimmedVideo(self,imgFrames,width,height):
-        print(len(imgFrames))
-        print("si")
+    def saveTrimmedVideo(self,imgFrames,width,height,segment_path):
         video = cv2.VideoWriter("temp.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 25, (width,height))
-        print("si")
         for image in imgFrames:
             video.write(image)
         cv2.destroyAllWindows()
         video.release()
-        res = subprocess.call(["ffmpeg", "-loglevel", "quiet","-y","-i","temp.mp4",
-                               "-i","temp.wav","-map","0:v","-map","1:a", "-c:v", "copy", "-shortest","temp2.mp4"])
+        command = f"ffmpeg -y -i temp.mp4 -i {segment_path} -map 0:v -map 1:a -c:v copy -c:a copy temp2.mp4"
+        subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-
         self.loader = Loader()
 
         # configure window
         self.title("AnnoTheia")
         self.geometry(f"{1200}x{720}")
-
         # configure grid layout (4x4)
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure((1, 2, 3,4), weight=1)
@@ -167,37 +146,25 @@ class App(customtkinter.CTk):
         self.videoHolder.grid(row=0, column=0, padx=(20,40), pady=(10, 10),sticky="nsew",rowspan=4, columnspan=5)
         # Init vlc player
         self.player = Screen(self.videoHolder)
-        
         self.player.place(relx=0.0005, rely=0, relwidth=0.999, relheight=1)
         self.player.play('temp2.mp4')
-        
-        
-
+        # Prev and next buttons
         self.prev_button = customtkinter.CTkButton(master=self, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), text="Prev",command=self.saveSample)
         self.prev_button.grid(row=7, column=2, padx=(20, 20), pady=(20, 20), sticky="e")
-
         self.next_button = customtkinter.CTkButton(master=self, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), text="Next",command=self.saveSample)
         self.next_button.grid(row=7, column=3, padx=(20, 20), pady=(20, 20), sticky="w")
-
-
-        # create textbox
+        # Create textbox
         self.textbox = customtkinter.CTkTextbox(self, width=250)
         self.textbox.grid(row=4, column=0, padx=(20, 20), pady=(20, 20), columnspan=5, sticky="nsew")
-
-        #Right side
-
+        # Accept and incorrect buttons
         self.accept_button = customtkinter.CTkButton(master=self, fg_color="#adedbe", border_width=2, text_color=("gray10", "#DCE4EE"), text="Accept",command=self.saveSample)
         self.accept_button.grid(row=0, column=5, padx=(20, 20))
-
         self.incorrect_button = customtkinter.CTkButton(master=self, fg_color="#edadad", border_width=2, text_color=("gray10", "#DCE4EE"), text="Incorrect",command=self.saveSample)
         self.incorrect_button.grid(row=1, column=5, padx=(20, 20))
 
         self.label = customtkinter.CTkLabel(master=self, text="F1 - Play/Pause \nF2 - Rewind 5s \nF3 - Forward 5s", justify="left")
         self.label.grid(row=4, column=5, padx=(20, 20), pady=(20, 0), sticky="w")
-
-        # set default values
-        #self.appearance_mode_optionemenu.set("Dark")
-        #self.textbox.insert("0.0", "---Video transcription---")
+        # Add value to textbox
         self.textbox.insert("0.0", self.loader.df.iloc[self.loader.index]["transcription"])
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
@@ -205,7 +172,6 @@ class App(customtkinter.CTk):
 
     def saveSample(self):
         self.player.stop()
-        print(self.textbox.get("0.0","end"))
         self.textbox.delete("0.0","end")
         self.loader.index += 1
         self.loader.createVideo()
