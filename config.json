@@ -1,11 +1,12 @@
 {
-    "inputVideo": "./inputs/testVideo.mp4", 
+    "inputVideo": "./inputs/long.mp4", 
     "minLength": 12,
     "threshold": 0.04,
     "outputVideo": "True",
     "model": "",
     "windowSize": 51,
-    "whisperLang": "auto",
+    "whisperLang": "es",
+    "whisper_size": "small",
     "minMethod": "False",
     "smoothWindowSize": 11
 }
