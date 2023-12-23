@@ -1,5 +1,5 @@
 {
-    "inputVideo": "./inputs/long.mp4", 
+    "inputVideo": "./inputs/testVideo.mp4", 
     "minLength": 12,
     "threshold": 0.04,
     "outputVideo": "True",
