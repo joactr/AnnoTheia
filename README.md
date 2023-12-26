@@ -28,6 +28,11 @@ The execution arguments are read from the [config.json](/config.json) file, wher
 - minMethod: Analyzes the video with a sliding window taking into account only the central frame (very slow) (default: False)
 - smoothWindowSize: Postprocessing sliding window size (in frames) for score smoothing (default: 11)
 
+### Requirements:
+- FFMPEG
+- VLC MEDIA PLAYER
+- Python libraries found in requirements.txt
+    - Can be installed with `pip install -r requirements.txt`
 
 ## GUI:
 ![Graphical user interface of AnnoTheia](./resources/interface.png)

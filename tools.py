@@ -40,6 +40,22 @@ def getVideoScenes(videoPath):
     return video_list, scene_list
 
 
+def convert_video_to_25fps(video_path):
+    # Converts video to 25 FPS if it isn't already
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    if abs(fps - 25) > 0.1:
+        output = f"./temp/{os.path.basename(video_path)[0]}_25fps.mp4"
+        cmd = f"ffmpeg -y -i {video_path} -r 25 {output}"
+        subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        cap.release()  # Release cap to avoid file lock
+        # Remove original video and change name of the new one
+        os.remove(video_path)
+        os.rename(output, video_path)
+        video_path = output
+    return video_path
+
+
 def get_suitable_scenes(video_list, scene_list, face_detector, min_frames):
     # Filters a list of videos and scenes to find suitable ones with faces in the first 10 frames.
     # Returns lists of suitable videos and their corresponding scenes.
@@ -160,7 +176,6 @@ def saveFaceCrops(videoPath, detector):
 
 
 def saveMultiFace(videoPath, detector, maxDistance):
-    print(videoPath)
     vidcap = cv2.VideoCapture(videoPath)
     success, image = vidcap.read()
     count = 0
@@ -262,7 +277,6 @@ def padVideo(video, center, nframes):
     nSideFrames = int((nframes-1)/2)
     video = torch.FloatTensor(np.array(video))
     videoFrames = video.shape[0]
-    # print(videoFrames)
     ini = center-nSideFrames
     fin = center+nSideFrames+1
     if center < nSideFrames:  # Necesitamos hacer padding por la izquierda
