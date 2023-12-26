@@ -29,6 +29,7 @@ The execution arguments are read from the [config.json](/config.json) file, wher
 - smoothWindowSize: Postprocessing sliding window size (in frames) for score smoothing (default: 11)
 
 ### Requirements:
+- PYTHON 3.10
 - FFMPEG
 - VLC MEDIA PLAYER
 - Python libraries found in requirements.txt
