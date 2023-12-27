@@ -7,13 +7,15 @@ import sys, time, numpy, os, subprocess, pandas, tqdm
 from loss import lossAV, lossA, lossV
 from model.talkNetModel import talkNetModel
 
+
 class talkNet(nn.Module):
-    def __init__(self, lr = 0.0001, lrDecay = 0.95, **kwargs):
+    def __init__(self, lr = 0.0001, lrDecay = 0.95, device="cpu", **kwargs):
         super(talkNet, self).__init__()        
-        self.model = talkNetModel().cuda()
-        self.lossAV = lossAV().cuda()
-        self.lossA = lossA().cuda()
-        self.lossV = lossV().cuda()
+        self.device = device
+        self.model = talkNetModel().to(self.device)
+        self.lossAV = lossAV().to(self.device)
+        self.lossA = lossA().to(self.device)
+        self.lossV = lossV().to(self.device)
         self.optim = torch.optim.Adam(self.parameters(), lr = lr)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optim, step_size = 1, gamma=lrDecay)
         print(time.strftime("%m-%d %H:%M:%S") + " Model para number = %.2f"%(sum(param.numel() for param in self.model.parameters()) / 1024 / 1024))
@@ -21,8 +23,8 @@ class talkNet(nn.Module):
     def forward(self,x):
         with torch.no_grad():
             audioFeature, visualFeature = x
-            audioEmbed = self.model.forward_audio_frontend(audioFeature.cuda()) # feedForward
-            visualEmbed = self.model.forward_visual_frontend(visualFeature.cuda())
+            audioEmbed = self.model.forward_audio_frontend(audioFeature.to(self.device)) # feedForward
+            visualEmbed = self.model.forward_visual_frontend(visualFeature.to(self.device))
             audioEmbed, visualEmbed = self.model.forward_cross_attention(audioEmbed, visualEmbed)
             outsAV= self.model.forward_audio_visual_backend(audioEmbed, visualEmbed)  
             scores,labels = self.lossAV.forward(outsAV)  # returns scores,labels  
@@ -39,13 +41,13 @@ class talkNet(nn.Module):
         for num, (audioFeature, visualFeature, labels) in enumerate(loader, start=1):
             #print(audioFeature.shape,visualFeature.shape)
             self.zero_grad()
-            audioEmbed = self.model.forward_audio_frontend(audioFeature.cuda()) # feedForward
-            visualEmbed = self.model.forward_visual_frontend(visualFeature.cuda())
+            audioEmbed = self.model.forward_audio_frontend(audioFeature.to(self.device)) # feedForward
+            visualEmbed = self.model.forward_visual_frontend(visualFeature.to(self.device))
             audioEmbed, visualEmbed = self.model.forward_cross_attention(audioEmbed, visualEmbed)
             outsAV= self.model.forward_audio_visual_backend(audioEmbed, visualEmbed)  
             outsA = self.model.forward_audio_backend(audioEmbed)
             outsV = self.model.forward_visual_backend(visualEmbed)
-            labels = labels.reshape((-1)).cuda() # Loss
+            labels = labels.reshape((-1)).to(self.device) # Loss
             nlossAV, _, _, prec = self.lossAV.forward(outsAV, labels)
             nlossA = self.lossA.forward(outsA, labels)
             nlossV = self.lossV.forward(outsV, labels)
@@ -69,13 +71,13 @@ class talkNet(nn.Module):
         index, top1, loss = 0, 0, 0
         for num, (audioFeature, visualFeature, labels) in enumerate(tqdm.tqdm(loader)):
             with torch.no_grad():                
-                audioEmbed = self.model.forward_audio_frontend(audioFeature.cuda()) # feedForward
-                visualEmbed = self.model.forward_visual_frontend(visualFeature.cuda())
+                audioEmbed = self.model.forward_audio_frontend(audioFeature.to(self.device)) # feedForward
+                visualEmbed = self.model.forward_visual_frontend(visualFeature.to(self.device))
                 audioEmbed, visualEmbed = self.model.forward_cross_attention(audioEmbed, visualEmbed)
                 outsAV= self.model.forward_audio_visual_backend(audioEmbed, visualEmbed)  
                 outsA = self.model.forward_audio_backend(audioEmbed)
                 outsV = self.model.forward_visual_backend(visualEmbed)
-                labels = labels.reshape((-1)).cuda() # Loss         
+                labels = labels.reshape((-1)).to(self.device) # Loss         
                 nlossAV, predScore, predLabel, prec = self.lossAV.forward(outsAV, labels)    
                 nlossA = self.lossA.forward(outsA, labels)
                 nlossV = self.lossV.forward(outsV, labels)

@@ -14,12 +14,14 @@ import whisper
 
 config = json.load(open('config.json'))
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # Models
 detector = face_detection.build_detector(
     "DSFDDetector", confidence_threshold=.35, nms_iou_threshold=.5)  # DSFDDetector
-model = talkNet()
+model = talkNet(device=device).to(device)
 checkpoint_name = 'model51_0004.model'
-model.load_state_dict(torch.load(os.path.join('weights', checkpoint_name)))
+model.load_state_dict(torch.load(os.path.join('weights', checkpoint_name), map_location=device))
 transcription_model = whisper.load_model(config.get("whisper_size", "small"))
 
 windowSize = config.get("windowSize", 51)
