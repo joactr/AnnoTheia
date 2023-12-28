@@ -136,7 +136,7 @@ class App(customtkinter.CTk):
         self.loader = Loader()
 
         # configure window
-        self.title("AnnoTheia")
+        self.title("AnnoTheia - PROCESSING SCENE " + str(self.loader.index) + " OF " + str(len(self.loader.df)))
         self.geometry(f"{1200}x{720}")
         # configure grid layout (4x4)
         self.grid_columnconfigure(0, weight=1)
@@ -212,6 +212,7 @@ class App(customtkinter.CTk):
         self.textbox.insert(
             "0.0", self.loader.df.iloc[self.loader.index]["transcription"])
         self.player.play('temp2.mp4')
+        app.title("AnnoTheia - PROCESSING SCENE " + str(self.loader.index) + " OF " + str(len(self.loader.df)))
 
     def fun(self, event):
         if event.keysym == 'F1':

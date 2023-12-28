@@ -47,7 +47,8 @@ def convert_video_to_25fps(video_path):
     if abs(fps - 25) > 0.1:
         output = f"./temp/{os.path.basename(video_path)[0]}_25fps.mp4"
         cmd = f"ffmpeg -y -i {video_path} -r 25 {output}"
-        subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        subprocess.call(cmd, stdout=subprocess.DEVNULL,
+                        stderr=subprocess.STDOUT)
         cap.release()  # Release cap to avoid file lock
         # Remove original video and change name of the new one
         os.remove(video_path)
@@ -348,15 +349,17 @@ def createVideo(videoName, imgFrames, audioPath, width, height):
 # Returns a list of [start,end] timestamps in seconds of the parts where a speaker is speaking with minimum length of minLength frames
 
 
-def getSpeaking(arr, minLength, fps):
+def getSpeaking(pred_arr, minLength, fps):
+    # Obtains the sequences where a person is talking during
+    # more than minLength consecutive frames
     prev_idx = 0
     posFrames = 0
     idx_list = []
-    for i, num in enumerate(arr):
+    for i, num in enumerate(pred_arr):
         if num == 1:
             posFrames += 1
             # Check if this is the end of a sequence
-            if i == len(arr) - 1 or arr[i+1] == 0:
+            if i == len(pred_arr) - 1 or pred_arr[i+1] == 0:
                 if i-prev_idx + 1 >= minLength:  # +1 because the sequence includes the current index
                     # +1 because the sequence includes the current index
                     idx_list.append((prev_idx/fps, (i+1)/fps))

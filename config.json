@@ -1,13 +1,13 @@
 {
-    "inputVideo": "./inputs/testVideo.mp4", 
+    "inputVideo": "./inputs/long.mp4", 
     "minLength": 12,
     "threshold": 0.04,
     "outputVideo": "True",
     "model": "",
-    "windowSize": 51,
+    "windowSize": 25,
     "whisperLang": "es",
     "whisper_size": "small",
     "minMethod": "False",
-    "smoothWindowSize": 11
+    "smoothWindowSize": 11,
+    "checkpoint_name": "model25_0005.model"
 }
-

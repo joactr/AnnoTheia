@@ -20,7 +20,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 detector = face_detection.build_detector(
     "DSFDDetector", confidence_threshold=.35, nms_iou_threshold=.5)  # DSFDDetector
 model = talkNet(device=device).to(device)
-checkpoint_name = 'model51_0004.model'
+checkpoint_name = config.get("checkpoint_name")
 model.load_state_dict(torch.load(os.path.join('weights', checkpoint_name), map_location=device))
 transcription_model = whisper.load_model(config.get("whisper_size", "small"))
 
@@ -74,7 +74,7 @@ for inputVideo, (video_start, video_end) in zip(video_list, scene_list):
                     audio, 1, center, windowSize, videoFrames).unsqueeze(0)
                 iVideo = tools.padVideo(
                     res[actualSpeaker], center-faceFrames[actualSpeaker][0], windowSize).unsqueeze(0)
-                scores, labels = model((iAudio, iVideo))
+                scores, _ = model((iAudio, iVideo))
                 totalScores[actualSpeaker].extend(
                     scores[:, 1].detach().cpu().numpy().tolist())
             # MEAN SLIDING WINDOW
@@ -93,7 +93,7 @@ for inputVideo, (video_start, video_end) in zip(video_list, scene_list):
                     audio, 1, center, windowSize, videoFrames).unsqueeze(0)
                 iVideo = tools.padVideo(
                     res[actualSpeaker], center-faceFrames[actualSpeaker][0], windowSize).unsqueeze(0)
-                scores, labels = model((iAudio, iVideo))
+                scores, _ = model((iAudio, iVideo))
                 totalScores[actualSpeaker].append(
                     scores[sideWindowSize][1].detach().cpu().numpy())
 
@@ -118,7 +118,7 @@ for inputVideo, (video_start, video_end) in zip(video_list, scene_list):
             predLabel = 1 if sc > thr else 0
             predArray[actualSpeaker].append(predLabel)
 
-    # BOUNDING BOXES AND CONFIDENCE
+    # SAVE VIDEO DATA
     path = os.path.normpath(inputVideo)
     videoName = str(path.split(os.sep)[-1])
 
@@ -126,15 +126,15 @@ for inputVideo, (video_start, video_end) in zip(video_list, scene_list):
         tools.saveFullVideo(videoName, inputVideo, audioPath,
                             totalScores, faceFrames, predArray, facePos)
 
-    # SAVE VIDEO DATA
+    # TRANSCRIPTION
     if config.get("whisperLang", "auto") == "auto":
         transcription = transcription_model.transcribe(
             audioPath, verbose=False, word_timestamps=True)
     else:
         transcription = transcription_model.transcribe(audioPath, language=config.get(
             "whisperLang"), verbose=False, word_timestamps=True)
-    pkDict = {"facePos": facePos, "faceFrames": faceFrames,
-              "preds": predArray, "transcription": transcription}
+        
+    pkDict = {"facePos": facePos, "preds": predArray, "transcription": transcription}
     with open("outputs/npz/"+videoName+'.pkl', 'wb') as f:  # open a text file
         pickle.dump(pkDict, f)  # serialize the list
 
@@ -151,10 +151,10 @@ for inputVideo, (video_start, video_end) in zip(video_list, scene_list):
     for speakerN in totalScores.keys():
         for (ini, end) in tools.getSpeaking(predArray[speakerN], config.get("minLength", 12), 25):
             iniW, endW = 0, 0
-            for i, (alignIni, alignEnd) in enumerate(alignArr):
-                if ini+align_margin >= alignIni and ini-align_margin <= alignEnd:
+            for i, (word_start, word_end) in enumerate(alignArr):
+                if ini+align_margin >= word_start and ini-align_margin <= word_end:
                     iniW = i
-                if alignIni <= end:
+                if word_start <= end:
                     endW = i
 
             newRow = {'video': videoPath, 'speaker': speakerN, 'ini': video_start+ini, 'end': video_start+end,
