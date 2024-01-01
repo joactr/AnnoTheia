@@ -1,5 +1,5 @@
 {
-    "inputVideo": "./inputs/long.mp4", 
+    "inputVideo": "./inputs/testVideo.mp4", 
     "minLength": 12,
     "threshold": 0.04,
     "outputVideo": "True",
@@ -9,5 +9,6 @@
     "whisper_size": "small",
     "minMethod": "False",
     "smoothWindowSize": 11,
-    "checkpoint_name": "model25_0005.model"
+    "checkpoint_name": "model25_0005.model",
+    "min_face_size": 32
 }

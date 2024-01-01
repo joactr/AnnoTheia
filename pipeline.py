@@ -56,7 +56,7 @@ for inputVideo, (video_start, video_end) in zip(video_list, scene_list):
     videoFrames = int(videoDuration*25)
     fps = 25
     # Load and process video
-    res, facePos, faceFrames = tools.saveMultiFace(inputVideo, detector, 50)
+    res, facePos, faceFrames = tools.saveMultiFace(inputVideo, detector, config.get("min_face_size"), 50)
     # AUDIO PROCESSING
     audioPath = tools.convert_video_to_audio_ffmpeg(inputVideo)
     _, sig = wav.read(audioPath)

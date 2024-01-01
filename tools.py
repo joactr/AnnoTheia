@@ -133,9 +133,9 @@ def extractBiggestFace(img, detector):
         cv2.waitKey(0)
 
 
-def extractFaces(img, detector):
+def extractFaces(img, detector, min_face_size=64):
     """
-    Detecta todas las caras de una imagen y devuelve la más grande recortada y reescalada a 112x112
+    Detects all faces in an image and return them and their bounding boxes
     """
     detections = detector.detect(img)
     faces = []
@@ -144,13 +144,18 @@ def extractFaces(img, detector):
         if len(detections) > 0:
             for cntr in detections:
                 xmin, ymin, xmax, ymax = int(cntr[0]), int(cntr[1]), int(
-                    cntr[2]), int(cntr[3])  # Guardamos bounding box
-                # Cara detectada, reescalamos
-                resImage = cv2.resize(
-                    img[max(ymin, 0):ymax, max(xmin, 0):xmax], (112, 112))
-                resImage = cv2.cvtColor(resImage, cv2.COLOR_BGR2GRAY)
-                faces.append(resImage)
-                faceCoords.append((xmin, ymin, xmax, ymax))
+                    cntr[2]), int(cntr[3])  # Save bounding box
+                # Discard low resolution faces
+                if xmax - xmin >= min_face_size and ymax - ymin >= min_face_size:
+                    # Scale face to 112x112
+                    resImage = cv2.resize(
+                        img[max(ymin, 0):ymax, max(xmin, 0):xmax], (112, 112))
+                    resImage = cv2.cvtColor(resImage, cv2.COLOR_BGR2GRAY)
+                    faces.append(resImage)
+                    faceCoords.append((xmin, ymin, xmax, ymax))
+
+            if len(faces) == 0: # All faces are small
+                return None, None
             return faces, faceCoords
         else:
             return None, None
@@ -176,16 +181,18 @@ def saveFaceCrops(videoPath, detector):
     return faceArray, facePos  # Devuelve número de frames
 
 
-def saveMultiFace(videoPath, detector, maxDistance):
+def saveMultiFace(videoPath, detector, min_face_size, maxDistance):
     vidcap = cv2.VideoCapture(videoPath)
     success, image = vidcap.read()
     count = 0
     faceArray = defaultdict(list)
     facePos = defaultdict(list)
     frames = defaultdict(list)
+    faces_detected = False
     while success:
-        faces, faceCoords = extractFaces(image, detector)
-        if len(faceArray[0]) == 0 and faces is not None:  # No hay caras aún
+        faces, faceCoords = extractFaces(image, detector, min_face_size)
+        if not faces_detected and faces is not None:  # No hay caras aún
+            faces_detected = True
             for d in range(len(faces)):
                 faceArray[d].append(faces[d])
                 facePos[d].append(faceCoords[d])
