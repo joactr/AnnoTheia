@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 
-from modules.active_speaker_detection.talknet_asd.architecture.audio_encoder import AudioEncoder
-from modules.active_speaker_detection.talknet_asd.architecture.visual_encoder import VisualFrontend, VisualTCN, VisualConv1D
-from modules.active_speaker_detection.talknet_asd.architecture.attention_layer import AttentionLayer
+from modules.active_speaker_detection.talknet_asd.layers.audio_encoder import AudioEncoder
+from modules.active_speaker_detection.talknet_asd.layers.visual_encoder import VisualFrontend, VisualTCN, VisualConv1D
+from modules.active_speaker_detection.talknet_asd.layers.attention_layer import AttentionLayer
 
 class TalkNetModel(nn.Module):
     def __init__(self):

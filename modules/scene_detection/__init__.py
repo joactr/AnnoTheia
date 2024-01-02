@@ -1,0 +1,1 @@
+from modules.scene_detection.pyscenedetect.pyscene_detector import PySceneDetector

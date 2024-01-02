@@ -1,1 +1,1 @@
-# include here the code necessary to make your imports easier
+from modules.face_detection.dsfd.dsfd_face_detector import DSFDFaceDetector

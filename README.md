@@ -36,7 +36,7 @@ The execution arguments are read from the [config.json](/config.json) file, wher
     - Can be installed with `pip install -r requirements.txt`
 
 ## GUI:
-![Graphical user interface of AnnoTheia](./resources/interface.png)
+![Graphical user interface of AnnoTheia](./doc/image/interface.png)
 
 ### To launch the GUI, simply run the following command:
 

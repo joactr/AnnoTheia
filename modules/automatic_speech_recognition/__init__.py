@@ -1,1 +1,1 @@
-# include here the code necessary to make your imports easier
+from modules.automatic_speech_recognition.whisper.whisper_asr import WhisperASR
