@@ -51,9 +51,9 @@ class SELayer(nn.Module):
         y = self.fc(y).view(b, c, 1, 1)
         return x * y
 
-class audioEncoder(nn.Module):
+class AudioEncoder(nn.Module):
     def __init__(self, layers, num_filters, **kwargs):
-        super(audioEncoder, self).__init__()
+        super(AudioEncoder, self).__init__()
         block = SEBasicBlock
         self.inplanes   = num_filters[0]
 

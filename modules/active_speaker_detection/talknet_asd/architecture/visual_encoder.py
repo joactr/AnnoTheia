@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 class ResNetLayer(nn.Module):
 
     """
@@ -33,7 +32,6 @@ class ResNetLayer(nn.Module):
         self.outbnb = nn.BatchNorm2d(outplanes, momentum=0.01, eps=0.001)
         return
 
-
     def forward(self, inputBatch):
         batch = F.relu(self.bn1a(self.conv1a(inputBatch)))
         batch = self.conv2a(batch)
@@ -52,8 +50,6 @@ class ResNetLayer(nn.Module):
         outputBatch = F.relu(self.outbnb(batch))
         return outputBatch
 
-
-
 class ResNet(nn.Module):
 
     """
@@ -67,7 +63,6 @@ class ResNet(nn.Module):
         self.layer3 = ResNetLayer(128, 256, stride=2)
         self.layer4 = ResNetLayer(256, 512, stride=2)
         self.avgpool = nn.AvgPool2d(kernel_size=(4,4), stride=(1,1))
-        
         return
 
 
@@ -97,7 +92,7 @@ class GlobalLayerNorm(nn.Module):
         gLN_y = self.gamma * (y - mean) / torch.pow(var + 1e-8, 0.5) + self.beta
         return gLN_y
 
-class visualFrontend(nn.Module):
+class VisualFrontend(nn.Module):
 
     """
     A visual feature extraction module. Generates a 512-dim feature vector per video frame.
@@ -105,7 +100,7 @@ class visualFrontend(nn.Module):
     """
 
     def __init__(self):
-        super(visualFrontend, self).__init__()
+        super(VisualFrontend, self).__init__()
         self.frontend3D = nn.Sequential(
                             nn.Conv3d(1, 64, kernel_size=(5,7,7), stride=(1,2,2), padding=(2,3,3), bias=False),
                             nn.BatchNorm3d(64, momentum=0.01, eps=0.001),
@@ -145,10 +140,10 @@ class DSConv1d(nn.Module):
         out = self.net(x)
         return out + x
 
-class visualTCN(nn.Module):
+class VisualTCN(nn.Module):
     def __init__(self):
-        super(visualTCN, self).__init__()
-        stacks = []        
+        super(VisualTCN, self).__init__()
+        stacks = []
         for x in range(5):
             stacks += [DSConv1d()]
         self.net = nn.Sequential(*stacks) # Visual Temporal Network V-TCN
@@ -157,9 +152,9 @@ class visualTCN(nn.Module):
         out = self.net(x)
         return out
 
-class visualConv1D(nn.Module):
+class VisualConv1D(nn.Module):
     def __init__(self):
-        super(visualConv1D, self).__init__()
+        super(VisualConv1D, self).__init__()
         self.net = nn.Sequential(
             nn.Conv1d(512, 256, 5, stride=1, padding=2),
             nn.BatchNorm1d(256),

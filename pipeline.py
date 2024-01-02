@@ -1,17 +1,23 @@
-import numpy as np
-import face_detection
 import os
-import python_speech_features
-import scipy.io.wavfile as wav
-import pandas as pd
-from talkNet import talkNet
-import torch
 import json
 import pickle
-import tools
 from collections import defaultdict
-import whisper
 
+import torch
+import numpy as np
+import pandas as pd
+
+
+import python_speech_features
+import scipy.io.wavfile as wav
+
+import whisper
+import face_detection
+from modules.active_speaker_detection import TalkNetASD
+
+import tools
+
+exit()
 config = json.load(open('config.json'))
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
