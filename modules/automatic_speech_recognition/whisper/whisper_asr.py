@@ -1,5 +1,5 @@
 import whisper
-from modules.automatic_speech_recognition.abs_speech_recognizer import AbsASR
+from modules.automatic_speech_recognition.abs_automatic_speech_recognizer import AbsASR
 
 class WhisperASR(AbsASR):
     def __init__(self, model_size="small", lang="auto"):

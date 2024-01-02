@@ -1,15 +1,15 @@
 import torch
 
 from modules.active_speaker_detection.abs_active_speaker_detector import AbsASD
-from modules.active_speaker_detection.talknet_asd.model.talknet_arch import TalkNetArch
+from modules.active_speaker_detection.talknet_asd.model.talknet_model import TalkNetModel
 
 class TalkNetASD(AbsASD):
     def __init__(self, checkpoint_path, device="cpu"):
         self.device = device
-        self.talknet_asd = TalkNetArch(device=self.device)
+        self.talknet_asd = TalkNetModel(device=self.device)
 
         print(f"Loading TalkNet-ASD from checkpoint: {checkpoint_path}")
-        self.talknet_asd.load_state_dict(checkpoint_path, map_location=self.device))
+        self.talknet_asd.load_state_dict(torch.load(checkpoint_path, map_location=self.device))
 
     def get_asd_scores(self, acoustic_input, visual_input):
         """Obtaining the frame-wise score predictions thanks to an ASD model.
@@ -21,7 +21,7 @@ class TalkNetASD(AbsASD):
         """
 
         scores = self._forward(acoustic_input, visual_input)
-        return scores.detach().cpu().numpy().tolist())
+        return scores.detach().cpu().numpy().tolist()
 
     def _forward(self, acoustic_input, visual_input):
         """Forward pass of TalkNet-ASD to obtain the frame-wise score predictions.

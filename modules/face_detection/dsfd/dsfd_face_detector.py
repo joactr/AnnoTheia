@@ -1,4 +1,5 @@
 import face_detection
+from modules.face_detection.abs_face_detector import AbsFaceDetector
 
 class DSFDFaceDetector(AbsFaceDetector):
     def __init__(self, confidence_threshold=0.35, nms_iou_threshold=0.5):

@@ -14,3 +14,5 @@ torch
 torchaudio
 torchvision
 tqdm
+pyyaml
+typeguard==2.13.3

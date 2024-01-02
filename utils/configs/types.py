@@ -1,6 +1,7 @@
 """Code based on the ESPNet toolkit implementation:
       https://github.com/espnet/espnet/blob/master/espnet2/utils/types.py#L86
 """
+from typing import Optional
 
 def str_or_none(value: str) -> Optional[str]:
     """str_or_none.

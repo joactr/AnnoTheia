@@ -1,0 +1,1 @@
+from pipelines.annotheia_pipeline import AnnoTheiaPipeline

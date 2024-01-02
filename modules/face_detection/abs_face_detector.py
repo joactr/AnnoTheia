@@ -8,9 +8,9 @@ class AbsFaceDetector(ABC):
     def detect_faces(self, frame):
         """Detect each face appearing on the scene.
         Args:
-            frame (np.array): a frame read from the scene clip.
+            frame (np.ndarray): a frame read from the scene clip.
         Returns:
-            list[(top,bottom,right,left)]: list of bounding boxes representing the faces detected on the scene.
+            np.ndarray: array containing the bounding boxes representing the faces detected on the scene.
         """
 
         raise NotImplementedError

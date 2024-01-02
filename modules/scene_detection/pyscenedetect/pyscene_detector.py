@@ -1,4 +1,4 @@
-from modules.scene_detector.abs_scene_detector import AbsSceneDetector
+from modules.scene_detection.abs_scene_detector import AbsSceneDetector
 from scenedetect import detect, ContentDetector, split_video_ffmpeg
 
 class PySceneDetector(AbsSceneDetector):
