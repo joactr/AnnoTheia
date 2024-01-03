@@ -52,7 +52,7 @@ class AnnoTheiaPipeline(AbsPipeline):
         self.face_max_frame = face_max_frame
         self.min_face_size = min_face_size
         self.max_face_distance_thr = max_face_distance_thr
-        self.min_method = min_method
+        self.method = method
         self.output_scenes = output_scenes
 
         # -- pipeline modules
