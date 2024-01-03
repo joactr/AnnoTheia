@@ -16,7 +16,7 @@ face_alignment:
 active_speaker_detection: talknet
 active_speaker_detection_conf:
   checkpoint_path: "./modules/active_speaker_detection/talknet_asd/weights/talknetasd_51frames_epoch4.pth"
-  device: cpu
+  device: "cpu"
 
 # -- automatic speech recognition
 speech_recognition: whisper
@@ -33,5 +33,5 @@ pipeline_conf:
   face_max_frame: 10
   min_face_size: 32
   max_face_distance_thr: 50
-  min_method: false
-  output_scenes: true
+  method: "no_overlap+smoothing"
+  save_scenes: false

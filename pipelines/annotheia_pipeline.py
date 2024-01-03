@@ -1,9 +1,11 @@
 import os
+import pickle
+import numpy as np
 from typing import Optional
 from termcolor import cprint
 from collections import defaultdict
 
-from scipy.io.wavfile as scipy_wavfile
+import scipy.io.wavfile as scipy_wavfile
 
 from modules.scene_detection.abs_scene_detector import AbsSceneDetector
 from modules.face_detection.abs_face_detector import AbsFaceDetector
@@ -17,6 +19,7 @@ from utils.face_detection import detect_multiple_faces
 from utils.audio_processing import extract_wav_from_video
 from utils.video_processing import convert_video_to_target_fps
 from utils.scene_detection import check_video_duration, get_suitable_scenes
+from utils.pipeline_sliding_strategies import non_overlap_sliding_strategy
 
 class AnnoTheiaPipeline(AbsPipeline):
 
@@ -34,9 +37,8 @@ class AnnoTheiaPipeline(AbsPipeline):
         face_max_frame: int = 10,
         min_face_size: int = 32,
         max_face_distance_thr = 50,
-        method: str = "no-overlap",
-        output_scenes: bool = True,
-        output_dir: str = "./outputs/",
+        method: str = "no_overlap+smoothing",
+        save_scenes: bool = False,
     ):
 
         # -- fixed settings
@@ -52,7 +54,6 @@ class AnnoTheiaPipeline(AbsPipeline):
         self.max_face_distance_thr = max_face_distance_thr
         self.min_method = min_method
         self.output_scenes = output_scenes
-        self.output_dir = output_dir
 
         # -- pipeline modules
         self.scene_detection = scene_detection,
@@ -61,14 +62,14 @@ class AnnoTheiaPipeline(AbsPipeline):
         self.active_speaker_detection = active_speaker_detection,
         self.speech_recognition = speech_recognition,
 
-    def process_video(self, video_path):
+    def process_video(self, video_path, output_dir):
         """Process a video to detect the candidate scenes to compile a new audio-visual database.
         Args:
+            video_path (str): path where the video clip is stored.
         Returns:
+            [dict]: list of dictionaries representing all the useful information to save in the resulting DataFrame that will be saved in CSV format.
         """
-        total_scores = defaultdict(list)
-        side_window_size = int( (self.window_size - 1) / 2 )
-        side_smoothing_window_size = int( (self.smoothing_window_size - 1) / 2 )
+        scenes_info = []
 
         # 1. Scene detection
         # 1.1. Splitting the video into scenes [(scene_path, start_timestamp, end_timestamp)]
@@ -86,53 +87,96 @@ class AnnoTheiaPipeline(AbsPipeline):
             scene_frames = int(scene_duration * self.target_fps)
 
             # 1.4. Extracting audio waveforms from scene video clip
-            wav_path = extract_wav_from_video(scene_path, self.scene_detection.temp_dir)
-            _, audio_waveform = scipy_wavfile.read(wav_path)
+            waveform_path = extract_wav_from_video(scene_path, self.scene_detection.temp_dir)
+            _, audio_waveform = scipy_wavfile.read(waveform_path)
 
             # 2. Face detection
             face_crops, face_boundings, face_frames = detect_multiple_faces(scene_path, self.face_detection, self.min_face_size, self.max_face_distance_thr)
 
             # 3. Active speaker detection
-            # -- for each detected person on the scene
-            if self.method == "no-overlap":
-                for actual_speaker in face_crops.keys():
-                    cprint(f"Analyzing if person {actual_speaker} on scene the one who is actually speaking", "blue", attrs=["bold", "reverse"])
+            # 3.1. Applying the pipeline sliding strategy when obtaining the frame-wise ASD scores
+            if self.method == "no_overlap+smoothing":
+                asd_scores = non_overlap_sliding_strategy(
+                    audio_waveform,
+                    face_crops,
+                    face_frames,
+                    self.window_size,
+                    self.smoothing_window_size,
+                    self.active_speaker_detection,
+                )
+            else:
+                raise ValueError(f"Unknow pipeline sliding strategy: {self.method}. There is only implementation for the 'non-overlap' strategy.")
 
-                    # -- depending on the video sliding strategy method chosen
-                    scene_length = len(face_crops[actual_speaker])
-                    extended_scene_length = scene_length + self.window_size + 1
+            # 3.2. Applying decision threshold
+            asd_labels = defaultdict(list)
+            side_window_size = int( (self.window_size - 1) / 2 )
 
-                    # -- for each window sample
-                    for window_idx in range(0, extended_scene_length, self.window_size):
-                        window_center = face_frames[actual_speaker][0] + window_idx
+            for actual_speaker in face_crops.keys():
+                thresholding_window_length = len(face_crops[actual_speaker]) + side_window_size
+                asd_scores[actual_speaker] = asd_scores[actual_speaker][side_window_size:thresholding_window_size]
 
-                        # 3.1. Extracting preprocessed input data
-                        acoustic_input, visual_input = self.active_speaker_detection.preprocess_input(
-                            audio_waveform,
-                            face_crops[actual_speaker],
-                            window_center=window_center,
-                            window_size=self.window_size,
-                            total_video_frames=scene_frames,
-                        )
+                thr_scores = (np.array(asd_scores[actual_speaker]) > self.threshold).astype(np.int64)
+                asd_labels[actual_speaker] += thr_scores.tolist()
 
-                        # 3.2. Computing the frame-wise ASD scores
-                        scores = self.active_speaker_detection.get_asd_scores(
-                            acoustic_input,
-                            visual_input,
-                        )
+            # 4. Automatic speech recognition
+            transcription = self.automatic_speech_recognition.get_transcription(waveform_path)
 
-                        # 3.3. Gathering the average score of the window sample
-                        total_scores[actual_speaker].extend( scores[:, 1] )
+            # TODO: Add code for facial landmark detection
 
-                    # -- smoothing sliding window
-                    score_length = len(total_scores[actual_speaker])
-                    for frame_idx in range(0, score_length):
-                        start = max(0, frame_idx - side_smoothing_window_size
-                        end = frame_idx + side_smoothing_window_size + 1
+            # 5. Saving staff
+            norm_scene_path = os.path.normpath(scene_path)
+            scene_id = str(norm_scene_path.split(os.sep)[-1])
 
-                        total_scores[actual_speaker][i] = np.mean(
-                            total_scores[actual_speaker][start:end]
-                        )
+            if self.save_scenes:
+                scene_output_path = os.path.join(output_dir, "scenes", scene_id+".mp4")
+                save_scene(scene_output_path, scene_path, waveform_path, face_boundings, face_frames, asd_scores, asd_labels)
 
-           else:
-                raise ValueError(f"Unknow video sliding strategy: {self.method}. There is only implementation for the 'non-overlap' strategy.")
+            # -- pickle containing useful information for the future audiovisual database
+            pickle_dict = {
+                "face_boundings": face_boundings,
+                "asd_labels": asd_labels,
+                "transcription": transcription,
+            }
+
+            pickle_output_path = os.path.join(output_dir, "pickles", scene_id+".pkl")
+            with open(pickle_output_path, "wb") as f:
+                pickle.dump(pickle_dict, f)
+
+            # 6. Aligning transcriptions for each scene
+            words = []
+            aligns = []
+
+            # -- processing transcription alignment provided by the ASR module
+            for segment in transcription["segments"]:
+                for word in segment["words"]:
+                    words.append( word["word"] )
+                    aligns.append( (word["start"], word["end"]) )
+
+            # -- aligning transcription for each scene
+            for speaker_id in asd_scores.keys():
+                # -- obtaining valid scenes where a person is actually speaking
+                # TODO: add implementatiton for the "red-valley" tolerance
+                for (start, end) in get_speaking(asd_labels[speaker_id], self.min_length, self.target_fps):
+                    start_w, end_w = 0, 0
+
+                    # -- alleviating in case of alignment mistakes by the ASR module
+                    for i, (word_start, word_end) in enumerate(aligns):
+                        if start+align_margin >= word_start and start-align_margin <= word_end:
+                            start_w = i
+                        if word_start <= end:
+                            end_w = i
+
+                    # -- compiling useful information about the detected scenes
+                    scene_info = {
+                        "video": video_path,
+                        "scene_start": start_timestamp,
+                        "ini": start_timestamp+start,
+                        "end": start_timestamp+end,
+                        "speaker": speaker_id,
+                        "pickle_path": pickle_output_path,
+                        "transcription": "".join(words[start_w:(end_w+1)]),
+                    }
+
+                    scenes_info.append(scene_info)
+
+        return scenes_info

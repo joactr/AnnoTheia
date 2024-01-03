@@ -1,5 +1,8 @@
+import os
 import yaml
 import argparse
+import pandas as pd
+from tqdm import tqdm
 from pathlib import Path
 
 from tasks import DetectCandidateScenesTask
@@ -19,15 +22,33 @@ if __name__ == "__main__":
         config = yaml.safe_load(f)
     config = argparse.Namespace(**config)
 
+    # -- obtaining temporary directory
+    temp_dir = config.scene_detection_conf["temp_dir"]
+
     # -- building the toolkit's pipeline
     pipeline = DetectCandidateScenesTask.build_pipeline(config)
 
-    # -- creating output directories
-    videoclips_output_dir = os.path.join(config.output_dir, "videos")
-    os.makedirs(videoclips_output_dir, exist_ok=True)
+    videos_to_process = sorted( os.listdir(config.video_dir) )
+    for video_filename in tqdm(videos_to_process, leave=False):
+        # -- creating output directories
+        video_output_dir = os.path.join(config.output_dir, video_filename.split(".")[0])
+        if config.save_scenes:
+            scenes_output_dir = os.path.join(video_output_dir, "scenes")
+            os.makedirs(scenes_output_dir, exist_ok=True)
 
-    pickles_output_dir = os.path.join(config.output_dir, "pickles")
-    os.makedirs(pickles_output_dir, exist_ok=True)
+        pickles_output_dir = os.path.join(video_output_dir, "pickles")
+        os.makedirs(pickles_output_dir, exist_ok=True)
 
+        # -- removing temporary files from the previous video that was processed
+        temp_files_to_remove = glob.glob(f"{temp_dir}/*")
+        for temp_filename_to_remove in temp_files_to_remove:
+            os.remove(temp_filename_to_remove)
 
-    # -- removing temporary files from the previous video that was processed
+        # -- processing video using the AnnoTheia's pipeline
+        video_path = os.path.join(config.video_dir, video_filename)
+        scenes_info = pipeline.process_video(video_path, video_output_dir)
+
+        # -- saving information w.r.t. the detected candidate scenes
+        video_df_output_path = os.path.join(video_output_dir, "scenes_info.csv")
+        video_df = pd.DataFrame(scenes_info, columns=["video", "scene_start", "ini", "end", "speaker", "pickle_path", "transcription"])
+        video_df.to_csv(video_df_output_path, index=False)

@@ -84,9 +84,9 @@ class Loader():
     def createVideo(self):
         row = self.df.iloc[self.index]
         speakerN = row["speaker"]
-        with open(row["dataPath"], 'rb') as f:  # open a text file
+        with open(row["pickle_path"], 'rb') as f:  # open a text file
             loaded = pickle.load(f)  # serialize the list
-        facePos = loaded["facePos"][speakerN]
+        facePos = loaded["face_boundings"][speakerN]
         # Cut appropiate segment for sample and convert to 25fps
         segment_path = os.path.join(
             self.tmp_path, f'{self.index}_{row["ini"]}_{row["end"]}.mp4')
