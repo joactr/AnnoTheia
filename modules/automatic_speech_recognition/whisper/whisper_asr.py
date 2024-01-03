@@ -1,4 +1,5 @@
 import whisper
+from termcolor import cprint
 from modules.automatic_speech_recognition.abs_automatic_speech_recognizer import AbsASR
 
 class WhisperASR(AbsASR):
@@ -14,6 +15,7 @@ class WhisperASR(AbsASR):
             transcription (list): list containing the transcriptions in the Whisper format. It have to include the word timestamps.
            Specifically, a 3-level nested dictionary like this: {'segments': [{'words': {'word': [str], 'start': float, 'end': float}}]}
         """
+        print(f"Transcribing scene from audio waveform: {audio_path} ...", "magenta", attrs=["bold", "reverse"])
         if self.lang == "auto":
             transcription = transcription_model.transcribe(
                 audio_path,
