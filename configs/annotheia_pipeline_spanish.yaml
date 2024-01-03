@@ -1,5 +1,3 @@
-video_dir: "./videos_to_process/"
-
 # -- scene detection
 scene_detection: pyscenedetect
 scene_detection_conf:
@@ -30,8 +28,10 @@ pipeline: annotheia
 pipeline_conf:
   min_length: 12
   threshold: 0.04
-  window_size: 25
+  window_size: 51
   smoothing_window_size: 11
+  face_max_frame: 10
   min_face_size: 32
+  max_face_distance_thr: 50
   min_method: false
   output_scenes: true

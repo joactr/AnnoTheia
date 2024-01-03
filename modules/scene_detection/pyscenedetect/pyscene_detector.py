@@ -1,5 +1,9 @@
+from termcolor import cprint
+
 from modules.scene_detection.abs_scene_detector import AbsSceneDetector
 from scenedetect import detect, ContentDetector, split_video_ffmpeg
+
+from utils.scene_detection import check_video_duration
 
 class PySceneDetector(AbsSceneDetector):
     def __init__(self, temp_dir = "./temp/"):
@@ -19,17 +23,17 @@ class PySceneDetector(AbsSceneDetector):
 
         # -- detecting scenes of the video
         scenes = detect(video_path, ContentDetector())
+        cprint(f"Splitting {video_path} into {len(scenes)} scenes...", "green", attrs=["bold", "reverse"])
 
         # -- splitting the video into scenes and save them
-        print(f"Splitting {video_path} into scenes...")
-
         os.chdir(self.temp_dir)
         split_video_ffmpeg(f".{video_path}", scenes)
         os.chdir("..")
+        cprint(f"Saving scene video clips in {self.temp_dir}", "green", attrs=["bold", "reverse"])
 
         # -- if no scenes were detected, return the original video path
         if len(scenes) == 0:
-            scene_list = [(video_path, 0, self._check_video_duration(video_path))]
+            scene_list = [(video_path, 0, check_video_duration(video_path))]
         else:
             video_list = glob.glob(self.temp_dir+"/*")
             scene_list = [
@@ -38,18 +42,3 @@ class PySceneDetector(AbsSceneDetector):
             ]
 
         return scene_list
-
-    def _check_video_duration(self, video_path):
-        duration = subprocess.check_output([
-            "ffprobe",
-            "-v",
-            "error",
-            "-show_entries",
-            "format=duration",
-            "-of",
-            "default=noprint_wrappers=1:nokey=1",
-            video_path
-        ])
-
-        return float(duration)
-

@@ -16,3 +16,4 @@ torchvision
 tqdm
 pyyaml
 typeguard==2.13.3
+termcolor

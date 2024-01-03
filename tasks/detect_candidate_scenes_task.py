@@ -109,7 +109,6 @@ class DetectCandidateScenesTask():
             pipeline_class = pipeline_choices.get_class("annotheia")
 
         pipeline = pipeline_class(
-            args.video_dir,
             scene_detection=scene_detection,
             face_detection=face_detection,
             face_alignment=face_alignment,
