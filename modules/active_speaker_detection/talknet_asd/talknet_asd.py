@@ -1,5 +1,6 @@
 import torch
 import random
+from termcolor import cprint
 
 from modules.active_speaker_detection.abs_active_speaker_detector import AbsASD
 from modules.active_speaker_detection.talknet_asd.model.talknet_model import TalkNetModel
@@ -9,7 +10,7 @@ class TalkNetASD(AbsASD):
         self.device = device
         self.talknet_asd = TalkNetModel(device=self.device)
 
-        print(f"Loading TalkNet-ASD from checkpoint: {checkpoint_path}")
+        cprint(f"Loading TalkNet-ASD from checkpoint: {checkpoint_path}", "blue", attrs=["bold","reverse"])
         self.talknet_asd.load_state_dict(torch.load(checkpoint_path, map_location=self.device))
 
     def preprocess_input(self, audio_waveform, face_crops, window_center, window_size, total_video_frames):

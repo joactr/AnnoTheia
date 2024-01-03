@@ -53,14 +53,14 @@ class AnnoTheiaPipeline(AbsPipeline):
         self.min_face_size = min_face_size
         self.max_face_distance_thr = max_face_distance_thr
         self.method = method
-        self.output_scenes = output_scenes
+        self.save_scenes = save_scenes
 
         # -- pipeline modules
-        self.scene_detection = scene_detection,
-        self.face_detection = face_detection,
-        self.face_alignment = face_alignment,
-        self.active_speaker_detection = active_speaker_detection,
-        self.speech_recognition = speech_recognition,
+        self.scene_detection = scene_detection
+        self.face_detection = face_detection
+        self.face_alignment = face_alignment
+        self.active_speaker_detection = active_speaker_detection
+        self.speech_recognition = speech_recognition
 
     def process_video(self, video_path, output_dir):
         """Process a video to detect the candidate scenes to compile a new audio-visual database.

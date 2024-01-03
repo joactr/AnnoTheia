@@ -1,5 +1,6 @@
 import os
 import yaml
+import glob
 import argparse
 import pandas as pd
 from tqdm import tqdm
@@ -28,11 +29,11 @@ if __name__ == "__main__":
     # -- building the toolkit's pipeline
     pipeline = DetectCandidateScenesTask.build_pipeline(config)
 
-    videos_to_process = sorted( os.listdir(config.video_dir) )
+    videos_to_process = sorted( os.listdir(args.video_dir) )
     for video_filename in tqdm(videos_to_process, leave=False):
         # -- creating output directories
-        video_output_dir = os.path.join(config.output_dir, video_filename.split(".")[0])
-        if config.save_scenes:
+        video_output_dir = os.path.join(args.output_dir, video_filename.split(".")[0])
+        if config.pipeline_conf["save_scenes"]:
             scenes_output_dir = os.path.join(video_output_dir, "scenes")
             os.makedirs(scenes_output_dir, exist_ok=True)
 
@@ -45,7 +46,7 @@ if __name__ == "__main__":
             os.remove(temp_filename_to_remove)
 
         # -- processing video using the AnnoTheia's pipeline
-        video_path = os.path.join(config.video_dir, video_filename)
+        video_path = os.path.join(args.video_dir, video_filename)
         scenes_info = pipeline.process_video(video_path, video_output_dir)
 
         # -- saving information w.r.t. the detected candidate scenes
