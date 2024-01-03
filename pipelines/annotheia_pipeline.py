@@ -76,7 +76,7 @@ class AnnoTheiaPipeline(AbsPipeline):
         scenes_list = self.scene_detection.split_video_into_scenes(video_path)
 
         # 1.2. Filtering out the non-suitable scenes according to different criteria
-        scenes_list = get_suitable_scenes(scenes_list, self.face_detector, self.face_max_frame)
+        scenes_list = get_suitable_scenes(scenes_list, self.face_detection, self.face_max_frame)
 
         # -- for each detected scene
         for scene_path, start_timestamp, end_timestamp in scenes_list:

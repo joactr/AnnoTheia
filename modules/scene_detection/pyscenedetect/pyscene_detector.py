@@ -1,3 +1,4 @@
+import os
 from termcolor import cprint
 
 from modules.scene_detection.abs_scene_detector import AbsSceneDetector
@@ -23,13 +24,13 @@ class PySceneDetector(AbsSceneDetector):
 
         # -- detecting scenes of the video
         scenes = detect(video_path, ContentDetector())
-        cprint(f"Splitting {video_path} into {len(scenes)} scenes...", "green", attrs=["bold", "reverse"])
+        cprint(f"SD: Splitting {video_path} into scenes...", "green", attrs=["bold", "reverse"])
 
         # -- splitting the video into scenes and save them
         os.chdir(self.temp_dir)
         split_video_ffmpeg(f".{video_path}", scenes)
         os.chdir("..")
-        cprint(f"Saving scene video clips in {self.temp_dir}", "green", attrs=["bold", "reverse"])
+        cprint(f"SD: Saving scene video clips in {self.temp_dir}", "green", attrs=["bold", "reverse"])
 
         # -- if no scenes were detected, return the original video path
         if len(scenes) == 0:

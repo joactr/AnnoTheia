@@ -4,7 +4,7 @@ import subprocess
 from tqdm import tqdm
 from termcolor import cprint
 
-def check_video_duration(self, video_path):
+def check_video_duration(video_path):
     """Computes the duration in seconds of a video clip
     Args:
         video_path: path to where the video clip is stored.
@@ -38,7 +38,7 @@ def get_suitable_scenes(scenes_list, face_detector, face_max_frame):
     """
     suitable_scenes = []
 
-    cprint(f"Filtering the {len(scenes_list)} detected scenes...", "green", attrs=["bold", "reverse"])
+    cprint(f"SD: Filtering the detected scenes...", "green", attrs=["bold", "reverse"])
     for scene_path, start_timestamp, end_timestamp in tqdm(scenes_list):
         # -- setting boolean variable
         suitable = True
@@ -67,6 +67,6 @@ def get_suitable_scenes(scenes_list, face_detector, face_max_frame):
 
         suitable_scenes.append( (scene_path, start_timestamp, end_timestamp) )
         cap.release()
-    cprint(f"Discarding {len(scenes_list) - len(suitable_scenes)} non-suitable scenes.", "green", attrs=["bold", "reverse"])
+    cprint(f"SD: Discarding {len(scenes_list) - len(suitable_scenes)} non-suitable scenes.", "green", attrs=["bold", "reverse"])
 
     return suitable_scenes

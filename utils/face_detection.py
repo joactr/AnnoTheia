@@ -17,7 +17,7 @@ def detect_multiple_faces(video_path, face_detector, min_face_size=32, max_face_
 
     # -- capturing video clip
     cap = cv2.VideoCapture(video_path)
-    cprint(f"Detecting faces on the {video_path} scene...", "yellow", attrs=["bold", "reverse"])
+    cprint(f"FD: Detecting faces on the {video_path} scene...", "yellow", attrs=["bold", "reverse"])
 
     # -- reading first frame
     ret, frame = cap.read()
@@ -115,5 +115,5 @@ def _detect_suitable_faces(video_path, image, face_detector, min_face_size=32):
         return None, None
 
     except:
-        cprint(f"Something wrong happened, the video clip {video_path} might be corrupted", "red", attrs=["bold", "reverse"])
+        cprint(f"FD: Something wrong happened, the video clip {video_path} might be corrupted", "red", attrs=["bold", "reverse"])
         print(traceback.format_exc())

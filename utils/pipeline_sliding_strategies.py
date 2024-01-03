@@ -17,7 +17,7 @@ def non_overlap_sliding_strategy(audio_waveform, face_crops, face_frames, window
     # -- for each detected person on the scene
     asd_scores = defaultdict(list)
     for actual_speaker in face_crops.keys():
-        cprint(f"Analyzing if person {actual_speaker} on scene the one who is actually speaking", "blue", attrs=["bold", "reverse"])
+        cprint(f"ASD: Analyzing if person {actual_speaker} on scene the one who is actually speaking", "blue", attrs=["bold", "reverse"])
 
         # -- depending on the video sliding strategy method chosen
         scene_length = len(face_crops[actual_speaker])
