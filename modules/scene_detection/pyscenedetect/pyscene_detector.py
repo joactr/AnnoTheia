@@ -1,4 +1,5 @@
 import os
+import glob
 from termcolor import cprint
 
 from modules.scene_detection.abs_scene_detector import AbsSceneDetector

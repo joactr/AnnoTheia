@@ -16,7 +16,7 @@ face_alignment:
 active_speaker_detection: talknet
 active_speaker_detection_conf:
   checkpoint_path: "./modules/active_speaker_detection/talknet_asd/weights/spanish_talknetasd_51frames.pth"
-  device: "cpu"
+  device: "cuda:0"
 
 # -- automatic speech recognition
 automatic_speech_recognition: whisper
