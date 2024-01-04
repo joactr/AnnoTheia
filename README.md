@@ -13,7 +13,7 @@ AnnoTheia is a data annotation tool that takes in a video and uses Active Speake
 
 ## Usage:
 
-`python pipeline.py`
+`python main_scenes.py --video-dir ${PATH_TO_VIDEO_DIR} --config-file ${PATH_TO_CONFIG_FILE} --output-dir ${PATH_TO_OUTPUT_DIR}`
 
 ### Arguments:
 
