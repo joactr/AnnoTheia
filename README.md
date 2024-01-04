@@ -1,45 +1,76 @@
-# Active Speaker Detection and Transcription
+<h1 align="center"><span style="font-weight:normal">AnnoTheia</h1>
+<h2 align="center">A Semi-Automatic Annotation Toolkit for Audio-Visual Speech Technologies</h2>    
+<div align="center">
+  
+[José-Miguel Acosta-Triana](), [David Gimeno-Gómez](https://scholar.google.es/citations?user=DVRSla8AAAAJ&hl=en), [Carlos-D. Martínez-Hinarejos](https://scholar.google.es/citations?user=M_EmUoIAAAAJ&hl=en)
+</div>
 
-AnnoTheia is a data annotation tool that takes in a video and uses Active Speaker Detection (ASD) techniques to extract the fragments where a person is speaking and obtain the transcription. It also has a GUI where you can manually check and validate the outputted samples.
+<div align="center">
+  
+[📘 Introduction](#intro) |
+[🛠️ Preparation](#preparation) |
+[🚀 Get on with it!](#getonwithit) |
+[💕 How can I help?](#helping) |
+[📖 Citation](#citation) |
+[📝 License](#license)
+</div>
 
-## Features:
+## <a name="intro"></a> 📘 Introduction
 
-- Automatic ASD and transcription
-- Manual review and correction
-- Support for multiple video formats
-- Customizable ASD parameters
-- You can use your own ASD model
-- Output of classified video with scores and bounding boxes (optional)
+## <a name="preparation"></a> 🛠️ Preparation
 
-## Usage:
+- Create and activate a new conda environment:
 
-`python main_scenes.py --video-dir ${PATH_TO_VIDEO_DIR} --config-file ${PATH_TO_CONFIG_FILE} --output-dir ${PATH_TO_OUTPUT_DIR}`
+```
+conda create -y -n annotheia python=3.10
+conda activate annotheia
+```
+- Install all requirements to prepare the environment:
 
-### Arguments:
+```
+bash ./prepare_environment.bash
+```
 
-The execution arguments are read from the [config.json](/config.json) file, where you can modify the following settings:
+## <a name="getonwithit"></a> 🚀 Get on with it!
 
-- inputVideo: Path to video file to analyze
-- outputVideo: Outputs a classified video with the scores and bounding boxes for each speaker and frame (default: False)
-- minLength: Minimum length of detected speech segment (in frames) to be considered (default: 12)
-- threshold: Classification threshold, lower values result in more detections but higher false positive rates (default: 0.04)
-- windowSize: Context window size that the model analyzes (default: 51)
-- whisperLang: Whisper audio-to-text language code (default: auto)
-- minMethod: Analyzes the video with a sliding window taking into account only the central frame (very slow) (default: False)
-- smoothWindowSize: Postprocessing sliding window size (in frames) for score smoothing (default: 11)
+The AnnoTheia toolkit is divided into two stages:
 
-### Requirements:
-- PYTHON 3.10
-- FFMPEG
-- VLC MEDIA PLAYER
-- Python libraries found in requirements.txt
-    - Can be installed with `pip install -r requirements.txt`
+- **Detect candidate scenes** to compile the new audio-visual database from long videos:
 
-## GUI:
-![Graphical user interface of AnnoTheia](./doc/image/interface.png)
+```
+python main_scenes.py \
+    --video_dir ${PATH_TO_VIDEO_DIR} \
+    --config-file ${PATH_TO_CONFIG_FILE} \
+    --output-dir ${PATH_TO_OUTPUT_DIR}
+```
 
-### To launch the GUI, simply run the following command:
+- **Supervise & Annotate** the candidate scenes detected by the toolkit. Once the the previous script warn you about a completed long video:
 
-`python main_gui.py`
+```
+python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
+```
+🌟 We plan to unify both stages. Any comments or suggestions in this regard will be of great help!
 
-This will open a window where you can load a video and view the output of the ASD model. You can also manually review and correct the transcription.
+## <a name="helping"></a> 💕 How can I help?
+
+### How many languages are we currently covering?
+
+## <a name="citation"></a> 📖 Citation
+If you found our work useful, please cite our paper:
+
+[AnnoTheia: A Semi-Automatic Annotation Toolkit for Audio-Visual Speech Technologies]()
+
+```
+@inproceedings{acosta24annotheia,
+  author="Acosta-Triana, José-Miguel and Gimeno-Gómez, David and Martínez-Hinarejos, Carlos-D",
+  title="AnnoTheia: A Semi-Automatic Annotation Toolkit for Audio-Visual Speech Technologies",
+  booktitle="",
+  volume="",
+  number="",
+  pages="",
+  year="2024",
+}
+```
+
+## <a name="license"></a> 📝 License
+This work is protected by []()
