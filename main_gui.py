@@ -14,6 +14,7 @@ customtkinter.set_appearance_mode("System")
 # Themes: "blue" (standard), "green", "dark-blue"
 customtkinter.set_default_color_theme("blue")
 
+
 class Screen(tk.Frame):
     '''
     Screen widget: Embedded video player from local or youtube
@@ -90,6 +91,7 @@ class Screen(tk.Frame):
             newTime = max(self.player.get_time() - seconds*1000, 0)
             self.player.set_time(newTime)
 
+
 class Loader():
     def __init__(self, scenes_info_path):
         self.df = pd.read_csv(scenes_info_path)
@@ -107,7 +109,8 @@ class Loader():
         facePos = loaded["face_boundings"][speakerN]
 
         # Cut appropiate segment for sample and convert to 25fps
-        segment_path = os.path.join(self.temp_dir, f'{self.index}_{row["ini"]}_{row["end"]}.mp4')
+        segment_path = os.path.join(
+            self.temp_dir, f'{self.index}_{row["ini"]}_{row["end"]}.mp4')
 
         subprocess.call([
             "ffmpeg",
@@ -182,12 +185,14 @@ class Loader():
 
 
 class App(customtkinter.CTk):
-    def __init__(self, scenes_info_path):
+    def __init__(self, scenes_info_path, output_file_path):
         super().__init__()
         self.loader = Loader(scenes_info_path)
+        self.output_file_path = output_file_path
 
         # configure window
-        self.title("AnnoTheia - Processing scene " + str(self.loader.index) + " of " + str(len(self.loader.df)))
+        self.title("AnnoTheia - Processing scene " +
+                   str(self.loader.index) + " of " + str(len(self.loader.df)))
         self.geometry(f"{1200}x{720}")
         # configure grid layout (4x4)
         self.grid_columnconfigure(0, weight=1)
@@ -253,8 +258,15 @@ class App(customtkinter.CTk):
             self.playVideo()
 
     def saveSample(self):
-        # REHACER METODO
-        pass
+        # If file exists, append to it, if not, create new file
+        if os.path.exists(self.output_file_path):
+            df = pd.read_csv(self.output_file_path)
+            new_row = pd.DataFrame([self.loader.df.iloc[self.loader.index]])
+            df = pd.concat([df, new_row], ignore_index=True).drop_duplicates()
+            df.to_csv(self.output_file_path, index=False)
+        else:
+            df = pd.DataFrame([self.loader.df.iloc[self.loader.index]])
+            df.to_csv(self.output_file_path, index=False)
 
     def playVideo(self):
         self.player.stop()
@@ -263,7 +275,8 @@ class App(customtkinter.CTk):
         self.textbox.insert(
             "0.0", self.loader.df.iloc[self.loader.index]["transcription"])
         self.player.play('temp2.mp4')
-        app.title("AnnoTheia - PROCESSING SCENE " + str(self.loader.index) + " OF " + str(len(self.loader.df)))
+        app.title("AnnoTheia - PROCESSING SCENE " +
+                  str(self.loader.index) + " OF " + str(len(self.loader.df)))
 
     def fun(self, event):
         if event.keysym == 'F1':
@@ -278,11 +291,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for supervising and annotating the candidate scenes provided by the AnnoTheia's Pipeline",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument("--scenes-info-path", required=True, type=str, help="Path to a CSV file where we can find the information w.r.t. the candidate scenes of a specific video.")
+    parser.add_argument("--scenes-info-path", required=True, type=str,
+                        help="Path to a CSV file where we can find the information w.r.t. the candidate scenes of a specific video.")
 
     args = parser.parse_args()
 
-    app = App(args.scenes_info_path)
+    extension_index = args.scenes_info_path.rfind('.csv')
+    output_csv = args.scenes_info_path[:extension_index] + '_annotated.csv'
+
+    app = App(args.scenes_info_path, output_csv)
     app.bind("<KeyPress>", app.fun)
     app.mainloop()
 
