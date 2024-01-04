@@ -1,0 +1,6 @@
+[submodule "modules/face_detection/ibug_facedetector"]
+	path = modules/face_detection/ibug_facedetector
+	url = https://github.com/hhj1897/face_detection.git
+[submodule "modules/face_alignment/ibug_facealigner"]
+	path = modules/face_alignment/ibug_facealigner
+	url = https://github.com/hhj1897/face_alignment.git
