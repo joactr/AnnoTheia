@@ -10,6 +10,7 @@ class PySceneDetector(AbsSceneDetector):
     def __init__(self, temp_dir = "./temp/"):
 
         self.temp_dir = temp_dir
+        cprint(f"\t(Scene Detection) PySceneDetect initialized", "green", attrs=["bold", "reverse"])
 
     def split_video_into_scenes(self, video_path):
         """Split a video into the different scenes composing it.
@@ -24,13 +25,15 @@ class PySceneDetector(AbsSceneDetector):
 
         # -- detecting scenes of the video
         scenes = detect(video_path, ContentDetector())
-        cprint(f"SD: Splitting {video_path} into scenes...", "green", attrs=["bold", "reverse"])
+
+        num_scenes_to_print = len(scenes) if len(scenes) > 0 else 1
+        cprint(f"\n\n\t(Scene Detection) Splitting {video_path} into {num_scenes_to_print} scenes...", "green", attrs=["bold", "reverse"])
 
         # -- splitting the video into scenes and save them
         os.chdir(self.temp_dir)
         split_video_ffmpeg(f".{video_path}", scenes)
         os.chdir("..")
-        cprint(f"SD: Saving scene video clips in {self.temp_dir}", "green", attrs=["bold", "reverse"])
+        cprint(f"\t(Scene Detection) Saving scene video clips in {self.temp_dir}", "green", attrs=["bold", "reverse"])
 
         # -- if no scenes were detected, return the original video path
         if len(scenes) == 0:

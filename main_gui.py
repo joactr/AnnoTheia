@@ -1,17 +1,18 @@
+import os
+import vlc
+import cv2
+import pickle
+import platform
+import argparse
+import subprocess
+import pandas as pd
 import tkinter as tk
 import customtkinter
-import vlc
-import os
-import cv2
-import pandas as pd
-import pickle
-import subprocess
 
 # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_appearance_mode("System")
 # Themes: "blue" (standard), "green", "dark-blue"
 customtkinter.set_default_color_theme("blue")
-
 
 class Screen(tk.Frame):
     '''
@@ -25,10 +26,23 @@ class Screen(tk.Frame):
         self.instance = vlc.Instance()
         self.player = self.instance.media_player_new()
         self.media = None
+        self.os_platform = platform.system()
 
     def GetHandle(self):
         # Getting frame ID
         return self.winfo_id()
+
+    def _play_depending_on_platform(self):
+        if self.os_platform == "Windows":
+            self.player.set_hwnd(self.winfo_id())
+        elif self.os_platform == "Darwin":
+            ns = _GetNSView(self.winfo_id())
+            if ns:
+                self.player.set_nsobject(ns)
+            else:
+                self.player.set_xwindow(self.winfo_id())
+        else:
+            self.player.set_xwindow(self.winfo_id())
 
     def play(self, _source):
         # Function to start player from given source
@@ -36,7 +50,8 @@ class Screen(tk.Frame):
         self.media.get_mrl()
         self.player.set_media(self.media)
 
-        self.player.set_hwnd(self.winfo_id())
+        self._play_depending_on_platform()
+
         self.player.play()
 
     def stop(self):
@@ -47,7 +62,7 @@ class Screen(tk.Frame):
 
         if self.player.get_length() - 350 < self.player.get_time():
             self.player.set_media(self.media)
-            self.player.set_hwnd(self.winfo_id())
+            self._play_depending_on_platform()
             self.player.play()
 
     def forward(self, seconds):
@@ -64,35 +79,56 @@ class Screen(tk.Frame):
             self.media = self.instance.media_new(_source)
             self.media.get_mrl()
             self.player.set_media(self.media)
-            self.player.set_hwnd(self.winfo_id())
-            self.player.play()
 
+            self._play_depending_on_platform()
+
+            self.player.play()
             self.player.set_time(newTime)
+
         else:
             # Can't go back past the start
             newTime = max(self.player.get_time() - seconds*1000, 0)
             self.player.set_time(newTime)
 
-
 class Loader():
-    def __init__(self):
-        self.df = pd.read_csv("outputs/res.csv")
+    def __init__(self, scenes_info_path):
+        self.df = pd.read_csv(scenes_info_path)
         self.index = 0
-        self.tmp_path = "./temp"
+        self.temp_dir = "./gui_temp"
+        os.makedirs(self.temp_dir, exist_ok=True)
         self.createVideo()
 
     def createVideo(self):
         row = self.df.iloc[self.index]
         speakerN = row["speaker"]
+
         with open(row["pickle_path"], 'rb') as f:  # open a text file
             loaded = pickle.load(f)  # serialize the list
         facePos = loaded["face_boundings"][speakerN]
+
         # Cut appropiate segment for sample and convert to 25fps
-        segment_path = os.path.join(
-            self.tmp_path, f'{self.index}_{row["ini"]}_{row["end"]}.mp4')
-        command = f'ffmpeg -y -ss {row["ini"]} -to {row["end"]} -i {row["video"]} -c:v libx264 -c:a aac -r 25 {segment_path} -loglevel quiet'
-        subprocess.call(command, stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL)
+        segment_path = os.path.join(self.temp_dir, f'{self.index}_{row["ini"]}_{row["end"]}.mp4')
+
+        subprocess.call([
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(row["video"]),
+            "-ss",
+            str(row["ini"]),
+            "-to",
+            str(row["end"]),
+            "-c:v",
+            "libx264",
+            "-c:a",
+            "aac",
+            "-r",
+            "25",
+            segment_path,
+            "-loglevel",
+            "quiet",
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
         cap = cv2.VideoCapture(segment_path)
         videoImages = []
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -120,23 +156,38 @@ class Loader():
 
     def saveTrimmedVideo(self, imgFrames, width, height, segment_path):
         video = cv2.VideoWriter(
-            "temp.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 25, (width, height))
+            f"{self.temp_dir}/temp.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 25, (width, height))
         for image in imgFrames:
             video.write(image)
         cv2.destroyAllWindows()
         video.release()
-        command = f"ffmpeg -y -i temp.mp4 -i {segment_path} -map 0:v -map 1:a -c:v copy -c:a copy temp2.mp4"
-        subprocess.call(command, stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL)
+
+        subprocess.call([
+            "ffmpeg",
+            "-y",
+            "-i",
+            f"{self.temp_dir}/temp.mp4",
+            "-i",
+            segment_path,
+            "-map",
+            "0:v",
+            "-map",
+            "1:a",
+            "-c:v",
+            "copy",
+            "-c:a",
+            "copy",
+            "./temp2.mp4",
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 class App(customtkinter.CTk):
-    def __init__(self):
+    def __init__(self, scenes_info_path):
         super().__init__()
-        self.loader = Loader()
+        self.loader = Loader(scenes_info_path)
 
         # configure window
-        self.title("AnnoTheia - PROCESSING SCENE " + str(self.loader.index) + " OF " + str(len(self.loader.df)))
+        self.title("AnnoTheia - Processing scene " + str(self.loader.index) + " of " + str(len(self.loader.df)))
         self.geometry(f"{1200}x{720}")
         # configure grid layout (4x4)
         self.grid_columnconfigure(0, weight=1)
@@ -224,6 +275,16 @@ class App(customtkinter.CTk):
 
 
 if __name__ == "__main__":
-    app = App()
+    parser = argparse.ArgumentParser(description="Script for supervising and annotating the candidate scenes provided by the AnnoTheia's Pipeline",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument("--scenes-info-path", required=True, type=str, help="Path to a CSV file where we can find the information w.r.t. the candidate scenes of a specific video.")
+
+    args = parser.parse_args()
+
+    app = App(args.scenes_info_path)
     app.bind("<KeyPress>", app.fun)
     app.mainloop()
+
+    os.system("rm ./temp2.mp4")
+    os.system(f"rm -rf {app.loader.temp_dir}")

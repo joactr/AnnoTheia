@@ -19,8 +19,8 @@ active_speaker_detection_conf:
   device: "cpu"
 
 # -- automatic speech recognition
-speech_recognition: whisper
-speech_recognition_conf:
+automatic_speech_recognition: whisper
+automatic_speech_recognition_conf:
   model_size: "small"
   lang: "es"
 
@@ -34,4 +34,5 @@ pipeline_conf:
   min_face_size: 32
   max_face_distance_thr: 50
   method: "no_overlap+smoothing"
+  align_margin: 0.3
   save_scenes: false

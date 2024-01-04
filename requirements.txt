@@ -6,3 +6,7 @@ termcolor==2.4.0
 scenedetect==0.6.2
 face-detection==0.2.2
 openai-whisper==20231117
+python-speech-features==0.6
+python-vlc==3.0.20123
+customtkinter==5.2.1
+packaging==23.2

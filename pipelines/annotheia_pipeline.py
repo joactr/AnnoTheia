@@ -19,7 +19,7 @@ from utils.face_detection import detect_multiple_faces
 from utils.audio_processing import extract_wav_from_video
 from utils.video_processing import convert_video_to_target_fps
 from utils.scene_detection import check_video_duration, get_suitable_scenes
-from utils.pipeline_sliding_strategies import non_overlap_sliding_strategy
+from utils.pipeline import non_overlap_sliding_strategy, get_speaking
 
 class AnnoTheiaPipeline(AbsPipeline):
 
@@ -29,7 +29,7 @@ class AnnoTheiaPipeline(AbsPipeline):
         face_detection: AbsFaceDetector,
         face_alignment: Optional[AbsFaceAligner],
         active_speaker_detection: AbsASD,
-        speech_recognition: AbsASR,
+        automatic_speech_recognition: AbsASR,
         min_length: int = 12,
         threshold: int = 0.04,
         window_size: int = 25,
@@ -38,6 +38,7 @@ class AnnoTheiaPipeline(AbsPipeline):
         min_face_size: int = 32,
         max_face_distance_thr = 50,
         method: str = "no_overlap+smoothing",
+        align_margin: float = 0.3,
         save_scenes: bool = False,
     ):
 
@@ -53,6 +54,7 @@ class AnnoTheiaPipeline(AbsPipeline):
         self.min_face_size = min_face_size
         self.max_face_distance_thr = max_face_distance_thr
         self.method = method
+        self.align_margin = align_margin
         self.save_scenes = save_scenes
 
         # -- pipeline modules
@@ -60,7 +62,7 @@ class AnnoTheiaPipeline(AbsPipeline):
         self.face_detection = face_detection
         self.face_alignment = face_alignment
         self.active_speaker_detection = active_speaker_detection
-        self.speech_recognition = speech_recognition
+        self.automatic_speech_recognition = automatic_speech_recognition
 
     def process_video(self, video_path, output_dir):
         """Process a video to detect the candidate scenes to compile a new audio-visual database.
@@ -100,6 +102,7 @@ class AnnoTheiaPipeline(AbsPipeline):
                     audio_waveform,
                     face_crops,
                     face_frames,
+                    scene_frames,
                     self.window_size,
                     self.smoothing_window_size,
                     self.active_speaker_detection,
@@ -113,7 +116,7 @@ class AnnoTheiaPipeline(AbsPipeline):
 
             for actual_speaker in face_crops.keys():
                 thresholding_window_length = len(face_crops[actual_speaker]) + side_window_size
-                asd_scores[actual_speaker] = asd_scores[actual_speaker][side_window_size:thresholding_window_size]
+                asd_scores[actual_speaker] = asd_scores[actual_speaker][side_window_size:thresholding_window_length]
 
                 thr_scores = (np.array(asd_scores[actual_speaker]) > self.threshold).astype(np.int64)
                 asd_labels[actual_speaker] += thr_scores.tolist()
@@ -161,7 +164,7 @@ class AnnoTheiaPipeline(AbsPipeline):
 
                     # -- alleviating in case of alignment mistakes by the ASR module
                     for i, (word_start, word_end) in enumerate(aligns):
-                        if start+align_margin >= word_start and start-align_margin <= word_end:
+                        if start+self.align_margin >= word_start and start-self.align_margin <= word_end:
                             start_w = i
                         if word_start <= end:
                             end_w = i

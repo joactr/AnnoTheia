@@ -1,6 +1,9 @@
 import torch
 import random
+import numpy as np
 from termcolor import cprint
+import python_speech_features
+import torch.nn.functional as F
 
 from modules.active_speaker_detection.abs_active_speaker_detector import AbsASD
 from modules.active_speaker_detection.talknet_asd.model.talknet_model import TalkNetModel
@@ -10,7 +13,7 @@ class TalkNetASD(AbsASD):
         self.device = device
         self.talknet_asd = TalkNetModel(device=self.device)
 
-        cprint(f"ASD: Loading TalkNet-ASD from checkpoint: {checkpoint_path}", "blue", attrs=["bold","reverse"])
+        cprint(f"\t(Active Speaker Detection) TalkNet-ASD intialized and pre-trained from checkpoint: {checkpoint_path}", "blue", attrs=["bold","reverse"])
         self.talknet_asd.load_state_dict(torch.load(checkpoint_path, map_location=self.device))
 
     def preprocess_input(self, audio_waveform, face_crops, window_center, window_size, total_video_frames):
@@ -58,11 +61,11 @@ class TalkNetASD(AbsASD):
             acoustic_input (np.ndarray): acoustic input features.
             visual_input (np.ndarray): visual input features.
         Returns:
-            scores (list): list containing the frame-wise score predictions.
+            scores (np.ndarray): matrix containing the frame-wise score predictions.
         """
 
         scores = self._forward(acoustic_input, visual_input)
-        return scores.detach().cpu().numpy().tolist()
+        return scores.detach().cpu().numpy()
 
     def _forward(self, acoustic_input, visual_input):
         """Forward pass of TalkNet-ASD to obtain the frame-wise score predictions.
@@ -76,17 +79,17 @@ class TalkNetASD(AbsASD):
             acoustic_input = acoustic_input.to(self.device)
             visual_input = visual_input.to(self.device)
 
-            audio_emb = self.talknet_asd.forward_audio_frontend(acoustic_input)
-            video_emb = self.talknet_asd.forward_visual_frontend(visual_input)
+            audio_emb = self.talknet_asd.model.forward_audio_frontend(acoustic_input)
+            video_emb = self.talknet_asd.model.forward_visual_frontend(visual_input)
 
-            audio_emb, video_emb = self.talknet_asd.forward_cross_attention(audio_emb, video_emb)
-            audiovisual_emb = self.talknet_asd.forward_audio_visual_backend(audio_emb, video_emb)
+            audio_emb, video_emb = self.talknet_asd.model.forward_cross_attention(audio_emb, video_emb)
+            audiovisual_emb = self.talknet_asd.model.forward_audio_visual_backend(audio_emb, video_emb)
 
-            scores, _ = self.lossAV.forward(audiovisual_emb)
+            scores, _ = self.talknet_asd.lossAV.forward(audiovisual_emb)
 
         return scores
 
-    def _padding_audio(audio, label, window_center, window_size, total_video_frames):
+    def _padding_audio(self, audio, label, window_center, window_size, total_video_frames):
         # -- computing the maximum number of frames for the audio cues assuming video data at 25 fps
         max_audio_frames = total_video_frames * 4
 
@@ -137,7 +140,7 @@ class TalkNetASD(AbsASD):
 
         return audio  # (T, 13)
 
-    def _padding_video(video, window_center, window_size):
+    def _padding_video(self, video, window_center, window_size):
         n_side_frames = int((window_size-1)/2)
 
         # -- convert to Torch tensor

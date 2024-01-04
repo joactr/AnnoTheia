@@ -9,7 +9,7 @@ def extract_wav_from_video(video_path, temp_dir):
     Returns:
         str: path to the resulting audio waveform file.
     """
-    video_id = os.path.basename(os.path.realpath(video_file)).split('.')[0]
+    video_id = os.path.basename(os.path.realpath(video_path)).split('.')[0]
     wav_path = os.path.join(os.getcwd(), temp_dir, f"{video_id}.wav")
 
     # Gets working directory and extracts audio

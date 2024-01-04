@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 import os
 import yaml
 import glob
@@ -5,6 +8,7 @@ import argparse
 import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
+from termcolor import cprint
 
 from tasks import DetectCandidateScenesTask
 
@@ -27,9 +31,11 @@ if __name__ == "__main__":
     temp_dir = config.scene_detection_conf["temp_dir"]
 
     # -- building the toolkit's pipeline
+    cprint(f"\n(Pipeline) Building AnnoTheia's Pipeline...", "light_grey", attrs=["bold","reverse"])
     pipeline = DetectCandidateScenesTask.build_pipeline(config)
 
     videos_to_process = sorted( os.listdir(args.video_dir) )
+    cprint(f"\n(Pipeline) Proccessing the {len(videos_to_process)} videos included in {args.output_dir}", "light_grey", attrs=["bold","reverse"])
     for video_filename in tqdm(videos_to_process, leave=False):
         # -- creating output directories
         video_output_dir = os.path.join(args.output_dir, video_filename.split(".")[0])
@@ -53,3 +59,6 @@ if __name__ == "__main__":
         video_df_output_path = os.path.join(video_output_dir, "scenes_info.csv")
         video_df = pd.DataFrame(scenes_info, columns=["video", "scene_start", "ini", "end", "speaker", "pickle_path", "transcription"])
         video_df.to_csv(video_df_output_path, index=False)
+
+        cprint(f"\n\t(Pipeline) {video_filename} has been processed. What are you waiting for? Come on, you can annotate it!\n", "light_grey", attrs=["bold","reverse"])
+

@@ -1,6 +1,7 @@
 import cv2
-from collections import defaultdict
+import numpy as np
 from termcolor import cprint
+from collections import defaultdict
 
 def detect_multiple_faces(video_path, face_detector, min_face_size=32, max_face_distance_thr=50):
     """Detects multiple faces on the scene controlling the identity of each person.
@@ -17,7 +18,8 @@ def detect_multiple_faces(video_path, face_detector, min_face_size=32, max_face_
 
     # -- capturing video clip
     cap = cv2.VideoCapture(video_path)
-    cprint(f"FD: Detecting faces on the {video_path} scene...", "yellow", attrs=["bold", "reverse"])
+    total_nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    cprint(f"\t(Face Detection) Detecting faces on the scene {video_path}...", "yellow", attrs=["bold", "reverse"])
 
     # -- reading first frame
     ret, frame = cap.read()
@@ -30,6 +32,8 @@ def detect_multiple_faces(video_path, face_detector, min_face_size=32, max_face_
     are_there_faces = False
     # -- while we do not reach the end of the video clip
     while ret:
+        print(f"\t\tProcessing frame {str(frame_count+1).zfill(4)} of {str(total_nframes).zfill(4)}", end="\r")
+
         # -- -- detecting all faces on the frame alognside their corresponding bounding boxes
         face_crops, face_boundings = _detect_suitable_faces(video_path, frame, face_detector, min_face_size)
 
@@ -68,6 +72,7 @@ def detect_multiple_faces(video_path, face_detector, min_face_size=32, max_face_
 
         ret, frame = cap.read()
         frame_count += 1
+    print()
 
     return multi_face_crops, multi_face_boundings, multi_face_frames
 
@@ -115,5 +120,5 @@ def _detect_suitable_faces(video_path, image, face_detector, min_face_size=32):
         return None, None
 
     except:
-        cprint(f"FD: Something wrong happened, the video clip {video_path} might be corrupted", "red", attrs=["bold", "reverse"])
+        cprint(f"(Face Detection) Something wrong happened, the video clip {video_path} might be corrupted", "red", attrs=["bold", "reverse"])
         print(traceback.format_exc())

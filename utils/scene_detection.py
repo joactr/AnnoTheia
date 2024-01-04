@@ -38,8 +38,10 @@ def get_suitable_scenes(scenes_list, face_detector, face_max_frame):
     """
     suitable_scenes = []
 
-    cprint(f"SD: Filtering the detected scenes...", "green", attrs=["bold", "reverse"])
-    for scene_path, start_timestamp, end_timestamp in tqdm(scenes_list):
+    cprint(f"\t(Scene Detection) Filtering the detected scenes...", "green", attrs=["bold", "reverse"])
+    for i, (scene_path, start_timestamp, end_timestamp) in enumerate(scenes_list):
+        print(f"\t\tProcessing scene {str(i+1).zfill(4)} of {str(len(scenes_list)).zfill(4)}", end="\r")
+
         # -- setting boolean variable
         suitable = True
 
@@ -67,6 +69,6 @@ def get_suitable_scenes(scenes_list, face_detector, face_max_frame):
 
         suitable_scenes.append( (scene_path, start_timestamp, end_timestamp) )
         cap.release()
-    cprint(f"SD: Discarding {len(scenes_list) - len(suitable_scenes)} non-suitable scenes.", "green", attrs=["bold", "reverse"])
+    cprint(f"\n\n\t(Scene Detection) Discarding {len(scenes_list) - len(suitable_scenes)} non-suitable scenes.", "green", attrs=["bold", "reverse"])
 
     return suitable_scenes

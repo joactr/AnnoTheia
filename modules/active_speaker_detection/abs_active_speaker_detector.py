@@ -27,7 +27,7 @@ class AbsASD(ABC):
             acoustic_input (np.ndarray): acoustic input features.
             visual_input (np.ndarray): visual input features.
         Returns:
-            scores (list): list containing the frame-wise score predictions.
+            scores (np.ndarray): matrix containing the frame-wise score predictions.
         """
 
         raise NotImplementedError

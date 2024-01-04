@@ -56,8 +56,8 @@ active_speaker_detection_choices = ClassChoices(
     default="talknet",
 )
 
-speech_recognition_choices = ClassChoices(
-    name="speech_recognition",
+automatic_speech_recognition_choices = ClassChoices(
+    name="automatic_speech_recognition",
     classes=dict(
         whisper=WhisperASR,
     ),
@@ -98,9 +98,9 @@ class DetectCandidateScenesTask():
         active_speaker_detection_class = active_speaker_detection_choices.get_class(args.active_speaker_detection)
         active_speaker_detection = active_speaker_detection_class(**args.active_speaker_detection_conf)
 
-        # 5. Speech Recognizer
-        speech_recognition_class = speech_recognition_choices.get_class(args.speech_recognition)
-        speech_recognition = speech_recognition_class(**args.speech_recognition_conf)
+        # 5. Automatic Speech Recognition
+        automatic_speech_recognition_class = automatic_speech_recognition_choices.get_class(args.automatic_speech_recognition)
+        automatic_speech_recognition = automatic_speech_recognition_class(**args.automatic_speech_recognition_conf)
 
         # 6. Building AnnoTheia Pipeline
         try:
@@ -113,7 +113,7 @@ class DetectCandidateScenesTask():
             face_detection=face_detection,
             face_alignment=face_alignment,
             active_speaker_detection=active_speaker_detection,
-            speech_recognition=speech_recognition,
+            automatic_speech_recognition=automatic_speech_recognition,
             **args.pipeline_conf,
         )
 
