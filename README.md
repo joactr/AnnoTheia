@@ -1,5 +1,5 @@
-<h1 align="center"><span style="font-weight:normal">AnnoTheia</h1>
-<h2 align="center">A Semi-Automatic Annotation Toolkit for</br>Audio-Visual Speech Technologies</h2>    
+<h1 align="center"><span style="font-weight:normal">AnnoTheia 🍮</h1>
+<h2 align="center">A Semi-Automatic Annotation ✍️ Toolkit for</br>Audio-Visual 🎥🎙️ Speech Technologies</h2>    
 <div align="center">
 
 <div align="center"> <img src="doc/image/interface.png"> </div>
