@@ -40,6 +40,6 @@ The execution arguments are read from the [config.json](/config.json) file, wher
 
 ### To launch the GUI, simply run the following command:
 
-`python gui.py`
+`python main_gui.py`
 
 This will open a window where you can load a video and view the output of the ASD model. You can also manually review and correct the transcription.
