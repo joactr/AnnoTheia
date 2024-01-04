@@ -2,8 +2,6 @@
 <h2 align="center">A Semi-Automatic Annotation ✍️ Toolkit for</br>Audio-Visual 🎥🎙️ Speech Technologies</h2>    
 <div align="center">
 
-<div align="center"> <img src="doc/image/interface.png"> </div>
-
 [José-Miguel Acosta-Triana](), [David Gimeno-Gómez](https://scholar.google.es/citations?user=DVRSla8AAAAJ&hl=en), [Carlos-D. Martínez-Hinarejos](https://scholar.google.es/citations?user=M_EmUoIAAAAJ&hl=en)
 </div>
 
@@ -16,6 +14,8 @@
 [📖 Citation](#citation) |
 [📝 License](#license)
 </div>
+
+<div align="center"> <img src="doc/image/interface.png"> </div>
 
 ## <a name="intro"></a> 📘 Introduction
 
