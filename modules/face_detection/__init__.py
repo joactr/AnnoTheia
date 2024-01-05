@@ -1,1 +1,2 @@
 from modules.face_detection.dsfd.dsfd_face_detector import DSFDFaceDetector
+from modules.face_detection.retina_face.retina_face_detector import RetinaFaceDetector

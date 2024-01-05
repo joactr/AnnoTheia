@@ -5,10 +5,10 @@ from modules.scene_detection import PySceneDetector
 from modules.scene_detection.abs_scene_detector import AbsSceneDetector
 
 from modules.face_detection import DSFDFaceDetector
-# from modules.face_detection import IbugFaceDetector
+from modules.face_detection import RetinaFaceDetector
 from modules.face_detection.abs_face_detector import AbsFaceDetector
 
-# from modules.face_alignment import IbugFaceAligner
+from modules.face_alignment import FANAligner
 from modules.face_alignment.abs_face_aligner import AbsFaceAligner
 
 from modules.active_speaker_detection import TalkNetASD
@@ -31,21 +31,21 @@ face_detection_choices = ClassChoices(
     name="face_detection",
     classes=dict(
         dsfd=DSFDFaceDetector,
-#         ibug=IbugFaceDetector,
+        retina=RetinaFaceDetector,
     ),
     type_check=AbsFaceDetector,
     default="dsfd",
 )
 
-# face_alignment_choices = ClassChoices(
-#     name="face_alignment",
-#     classes=dict(
-#         ibug=IbugFaceAligner,
-#     ),
-#     type_check=AbsFaceAligner,
-#     default=None,
-#     optional=True
-# )
+face_alignment_choices = ClassChoices(
+    name="face_alignment",
+    classes=dict(
+        fan=FANAligner,
+    ),
+    type_check=AbsFaceAligner,
+    default=None,
+    optional=True
+)
 
 active_speaker_detection_choices = ClassChoices(
     name="active_speaker_detection",
@@ -87,12 +87,11 @@ class DetectCandidateScenesTask():
         face_detection = face_detection_class(**args.face_detection_conf)
 
         # 3. Face Alignment
-        # if getattr(args, "face_alignment", None) is not None:
-        #     face_alignment_class = face_alignment_choices.get_class(args.face_alignment)
-        #     face_alignment = face_alignment_class(**args.face_alignment_conf)
-        # else:
-        #     face_alignment = None
-        face_alignment = None
+        if getattr(args, "face_alignment", None) is not None:
+            face_alignment_class = face_alignment_choices.get_class(args.face_alignment)
+            face_alignment = face_alignment_class(**args.face_alignment_conf)
+        else:
+            face_alignment = None
 
         # 4. Active Speaker Detection
         active_speaker_detection_class = active_speaker_detection_choices.get_class(args.active_speaker_detection)

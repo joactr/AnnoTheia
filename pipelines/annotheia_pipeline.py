@@ -92,8 +92,8 @@ class AnnoTheiaPipeline(AbsPipeline):
             waveform_path = extract_wav_from_video(scene_path, self.scene_detection.temp_dir)
             _, audio_waveform = scipy_wavfile.read(waveform_path)
 
-            # 2. Face detection
-            face_crops, face_boundings, face_frames = detect_multiple_faces(scene_path, self.face_detection, self.min_face_size, self.max_face_distance_thr)
+            # 2. Face detection + Face Alignment
+            face_crops, face_boundings, face_landmarks, face_frames = detect_multiple_faces(scene_path, self.face_detection, self.face_alignment, self.min_face_size, self.max_face_distance_thr)
 
             # 3. Active speaker detection
             # 3.1. Applying the pipeline sliding strategy when obtaining the frame-wise ASD scores
@@ -124,9 +124,7 @@ class AnnoTheiaPipeline(AbsPipeline):
             # 4. Automatic speech recognition
             transcription = self.automatic_speech_recognition.get_transcription(waveform_path)
 
-            # TODO: Add code for facial landmark detection
-
-            # 5. Saving staff
+            # -- saving staff
             norm_scene_path = os.path.normpath(scene_path)
             scene_id = str(norm_scene_path.split(os.sep)[-1])
 
@@ -137,6 +135,7 @@ class AnnoTheiaPipeline(AbsPipeline):
             # -- pickle containing useful information for the future audiovisual database
             pickle_dict = {
                 "face_boundings": face_boundings,
+                "face_landmarks": face_landmarks,
                 "asd_labels": asd_labels,
                 "transcription": transcription,
             }
@@ -145,7 +144,7 @@ class AnnoTheiaPipeline(AbsPipeline):
             with open(pickle_output_path, "wb") as f:
                 pickle.dump(pickle_dict, f)
 
-            # 6. Aligning transcriptions for each scene
+            # 5. Aligning transcriptions for each scene
             words = []
             aligns = []
 

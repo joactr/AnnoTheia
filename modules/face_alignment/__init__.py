@@ -1,1 +1,1 @@
-# include here the code necessary to make your imports easier
+from modules.face_alignment.fan_aligner.fan_aligner import FANAligner

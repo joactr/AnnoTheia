@@ -11,7 +11,7 @@ class AbsFaceDetector(ABC):
             frame (np.ndarray): a frame read from the scene clip.
 
         Returns:
-            [(top,bottom,right,left)]: list of bounding boxes representing the faces detected on the scene.
+            [(left, top, right, bottom)]: list of bounding boxes representing the faces detected on the scene for each person.
         """
 
         raise NotImplementedError
