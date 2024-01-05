@@ -12,6 +12,8 @@ import customtkinter
 import tkinter as tk
 from CTkMessagebox import CTkMessagebox
 
+from ibug.face_alignment.utils import plot_landmarks
+
 # -- modes: "System" (standard), "Dark", "Light"
 customtkinter.set_appearance_mode("System")
 # -- themes: "blue" (standard), "green", "dark-blue"
@@ -115,8 +117,9 @@ class Loader():
         with open(row["pickle_path"], 'rb') as f:
             loaded = pickle.load(f)
 
-        # -- getting face bounding boxes
+        # -- getting face bounding boxes + face landmarks
         face_boundings = loaded["face_boundings"][speaker_id]
+        face_landmarks = loaded["face_landmarks"][speaker_id]
 
         # -- trimming appropiate segment of the sample and converting it to 25fps
         segment_path = os.path.join(self.temp_dir, f'{self.index}_{row["ini"]}_{row["end"]}.mp4')
@@ -147,7 +150,7 @@ class Loader():
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         ini_frame = int( (row["ini"] - row["scene_start"]) * 25)
 
-        videoImages = []
+        video_frames = []
         n_frame = ini_frame
         bb_color = (0, 255, 0)
         final_frame = int( row["end"] * 25 )
@@ -156,10 +159,17 @@ class Loader():
         while n_frame < final_frame:
             ret, image = cap.read()
 
-            left, top, right, bottom = face_boundings[n_frame]
-
             # -- drawing face bounding box
-            videoImages.append(cv2.rectangle(image, (left, top), (right, bottom), bb_color, 1))
+            left, top, right, bottom = face_boundings[n_frame]
+            frame_to_video = cv2.rectangle(image, (left, top), (right, bottom), bb_color, 1)
+
+            # -- drawing face landmarks
+            if len(face_landmarks) > 0:
+                landmarks = face_landmarks[n_frame]
+                frame_to_video = plot_landmarks(frame_to_video, landmarks)
+
+            # -- gathering frames to create the video clip
+            video_frames.append(frame_to_video)
 
             # -- updating frame counter
             n_frame += 1
@@ -168,12 +178,13 @@ class Loader():
             if ret == False:
                 break
 
-        self.save_trimmed_video(videoImages, frame_width, frame_height, segment_path)
+        self.save_trimmed_video(video_frames, frame_width, frame_height, segment_path)
 
-    def save_trimmed_video(self, imgFrames, frame_width, frame_height, segment_path):
+    def save_trimmed_video(self, video_frames, frame_width, frame_height, segment_path):
         # -- creating temporary video clip from the segment
         video = cv2.VideoWriter(f"{self.temp_dir}/temp.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 25, (frame_width, frame_height))
-        for image in imgFrames:
+        # -- gathering all the video frame after drawings the bounding box and face landmarks
+        for image in video_frames:
             video.write(image)
         cv2.destroyAllWindows()
         video.release()
@@ -261,11 +272,10 @@ class App(customtkinter.CTk):
         self.play_video()
 
     def next_sample(self):
+        # -- if the user reached the last candidate sample
         if (self.loader.index + 1) >= len(self.loader.df):
             self.loader.index = len(self.loader.df) - 1
             CTkMessagebox(title=f"Congratulations!!", message=f"Video {self.video_id} has been annotated :) Please, close the GUI unless you want to check your decisions",)()
-            self.destroy()
-
         else:
             self.loader.index += 1
             self.play_video()
@@ -282,6 +292,9 @@ class App(customtkinter.CTk):
             annotated_df = pd.read_csv(self.output_file_path)
             annotated_df = pd.concat([annotated_df, accepted_sample], ignore_index=True).drop_duplicates()
             annotated_df.to_csv(self.output_file_path, index=False)
+
+            # -- updating dataframe into memory just in case the user come back to discard the sample :S
+            self.loader.df.iloc[self.loader.index]["transcription"] = self.textbox.get("0.0", "end").strip()
 
         else:
             # -- getting accepted sample
@@ -304,6 +317,8 @@ class App(customtkinter.CTk):
             & (annotated_df["ini"] == sample_to_remove["ini"])
             & (annotated_df["end"] == sample_to_remove["end"])
             & (annotated_df["speaker"] == sample_to_remove["speaker"])
+            & (annotated_df["pickle_path"] == sample_to_remove["pickle_path"])
+            & (annotated_df["transcription"] == sample_to_remove["transcription"])
         ].index)
         annotated_df.to_csv(self.output_file_path, index=False)
 
@@ -313,14 +328,18 @@ class App(customtkinter.CTk):
         self.play_video()
 
     def play_video(self):
+        # -- updating screen displaying a new sample
         self.player.stop()
+
         self.textbox.delete("0.0", "end")
         self.loader.create_video()
         self.textbox.insert("0.0", self.loader.df.iloc[self.loader.index]["transcription"])
         self.player.play(self.final_video_clip_path)
+
         app.title(f"AnnoTheia - Processing scene {self.loader.index+1} of {len(self.loader.df)}")
 
-    def fun(self, event):
+    def keyword_func(self, event):
+        # -- keyword shortages functionaly
         if event.keysym == 'F1':
             self.player.play_pause()
         if event.keysym == 'F2':
@@ -343,7 +362,7 @@ if __name__ == "__main__":
 
     # -- starting the user interface
     app = App(args.scenes_info_path, output_csv)
-    app.bind("<KeyPress>", app.fun)
+    app.bind("<KeyPress>", app.keyword_func)
     app.mainloop()
 
     # -- removing temporary files

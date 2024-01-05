@@ -34,7 +34,7 @@ conda activate annotheia
 - Install all requirements to prepare the environment:
 
 ```
-bash ./prepare_environment.bash
+python ./prepare_environment.py
 ```
 
 ## <a name="getonwithit"></a> 🚀 Get on with it!
