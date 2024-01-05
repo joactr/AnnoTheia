@@ -1,6 +1,7 @@
 import os
 import vlc
 import cv2
+import shutil
 import pickle
 import platform
 import argparse
@@ -296,12 +297,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # -- creating an annotated copy of the scene's info CSV
     extension_index = args.scenes_info_path.rfind('.csv')
     output_csv = args.scenes_info_path[:extension_index] + '_annotated.csv'
 
+    # -- starting the user interface
     app = App(args.scenes_info_path, output_csv)
     app.bind("<KeyPress>", app.fun)
     app.mainloop()
 
-    os.system("rm ./temp2.mp4")
-    os.system(f"rm -rf {app.loader.temp_dir}")
+    # -- removing temporary files
+    os.remove(os.path.join(os.getcwd(), "temp2.mp4"))
+    shutil.rmtree(app.loader.temp_dir)
