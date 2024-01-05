@@ -50,7 +50,7 @@ python main_scenes.py \
     --output-dir ${PATH_TO_OUTPUT_DIR}
 ```
 
-- **Supervise & Annotate** the candidate scenes detected by the toolkit. Once the the previous script warn you about a completed long video:
+- **Supervise & Annotate** the candidate scenes detected by the toolkit. Once the previous script warns you about a completed long video:
 
 ```
 python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
@@ -60,6 +60,30 @@ python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
 ## <a name="helping"></a> 💕 How can I help?
 
 ### How many languages are we currently covering?
+
+<div align="center">
+  
+✅ English 🇬🇧 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+✅ Spanish 🇪🇸 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+⬜ Romanian 🇷🇴 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Kalanga 🇿🇼 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Polish 🇵🇱 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+⬜ Turkish 🇹🇷 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Vietnamese 🇻🇳 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Japanase 🇯🇵 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Malay 🇲🇾 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Somali 🇸🇴 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+⬜ Norwegian 🇳🇴 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Hindi 🇮🇳 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Swahili 🇹🇿 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Urdu 🇵🇰 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ and so on ... 🏳️ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+</div>
+
+🌟 Help us cover languages around the world 🗺️! It will be a great contribution to the research community to move towards a fairer development of speech technologies. Take a look at our tutorial on [How Can I Prepare AnnoTheia for My Language of Interest?]()!
 
 ## <a name="citation"></a> 📖 Citation
 If you found our work useful, please cite our paper:
