@@ -7,8 +7,10 @@ import platform
 import argparse
 import subprocess
 import pandas as pd
-import tkinter as tk
+
 import customtkinter
+import tkinter as tk
+from CTkMessagebox import CTkMessagebox
 
 # -- modes: "System" (standard), "Dark", "Light"
 customtkinter.set_appearance_mode("System")
@@ -199,8 +201,7 @@ class App(customtkinter.CTk):
     def __init__(self, scenes_info_path, output_file_path):
         super().__init__()
 
-        # -- ending control
-        self.is_last_sample = False
+        self.video_id = scenes_info_path.split(os.sep)[-2]
 
         ## -- defining different settings
         self.temp_dir = "./temp_gui"
@@ -257,16 +258,12 @@ class App(customtkinter.CTk):
 
     def prev_sample(self):
         self.loader.index = min(max(0, self.loader.index - 1), len(self.loader.df) - 1)
-        if self.loader.index < (len(self.loader.df) - 1):
-            self.is_last_sample = False
         self.play_video()
 
     def next_sample(self):
         if (self.loader.index + 1) >= len(self.loader.df):
-            self.is_last_sample = True
-            # -- ending dialog window
-            # dialog = customtkinter.CTkInputDialog(text="Type in a number:", title="Test")
-            # dialog.focus()
+            self.loader.index = len(self.loader.df) - 1
+            CTkMessagebox(title=f"Congratulations!!", message=f"Video {self.video_id} has been annotated :) Please, close the GUI unless you want to check your decisions",)()
             self.destroy()
 
         else:
@@ -274,33 +271,46 @@ class App(customtkinter.CTk):
             self.play_video()
 
     def save_sample(self):
-        if not self.is_last_sample:
-            # -- if file exists, append to it. If not, create new file
-            if os.path.exists(self.output_file_path):
-                # -- getting accepted sample
-                accepted_sample = pd.DataFrame([self.loader.df.iloc[self.loader.index]])
-                # -- just in case, updating the supervised transcription
-                accepted_sample["transcription"] = self.textbox.get("0.0", "end").strip()
+        # -- if file exists, append to it. If not, create new file
+        if os.path.exists(self.output_file_path):
+            # -- getting accepted sample
+            accepted_sample = pd.DataFrame([self.loader.df.iloc[self.loader.index]])
+            # -- just in case, updating the supervised transcription
+            accepted_sample["transcription"] = self.textbox.get("0.0", "end").strip()
 
-                # -- updating annotated and supervised samples
-                annotated_df = pd.read_csv(self.output_file_path)
-                annotated_df = pd.concat([annotated_df, accepted_sample], ignore_index=True).drop_duplicates()
-                annotated_df.to_csv(self.output_file_path, index=False)
+            # -- updating annotated and supervised samples
+            annotated_df = pd.read_csv(self.output_file_path)
+            annotated_df = pd.concat([annotated_df, accepted_sample], ignore_index=True).drop_duplicates()
+            annotated_df.to_csv(self.output_file_path, index=False)
 
-            else:
-                # -- getting accepted sample
-                first_accepted_sample = pd.DataFrame([self.loader.df.iloc[self.loader.index]])
-                # -- just in case, updating the supervised transcription
-                first_accepted_sample["transcription"] = self.textbox.get("0.0", "end").strip()
-                # -- creating annotated dataframe
-                first_accepted_sample.to_csv(self.output_file_path, index=False)
+        else:
+            # -- getting accepted sample
+            first_accepted_sample = pd.DataFrame([self.loader.df.iloc[self.loader.index]])
+            # -- just in case, updating the supervised transcription
+            first_accepted_sample["transcription"] = self.textbox.get("0.0", "end").strip()
+            # -- creating annotated dataframe
+            first_accepted_sample.to_csv(self.output_file_path, index=False)
 
-            # -- get the next candidate scene
-            self.next_sample()
+        # -- get the next candidate scene
+        self.next_sample()
 
     def delete_sample(self):
-        if not self.is_last_sample:
-            self.next_sample()
+        # -- perhaps this sample was previously accepted, so it has to be removed from the annotated dataframe
+        annotated_df = pd.read_csv(self.output_file_path)
+        sample_to_remove = self.loader.df.iloc[self.loader.index]
+        annotated_df = annotated_df.drop(index = annotated_df[
+            (annotated_df["video"] == sample_to_remove["video"])
+            & (annotated_df["scene_start"] == sample_to_remove["scene_start"])
+            & (annotated_df["ini"] == sample_to_remove["ini"])
+            & (annotated_df["end"] == sample_to_remove["end"])
+            & (annotated_df["speaker"] == sample_to_remove["speaker"])
+        ].index)
+        annotated_df.to_csv(self.output_file_path, index=False)
+
+        # -- removing the sample from the dataframe into memory
+        self.loader.df = self.loader.df.drop(labels=self.loader.index, axis=0)
+        self.loader.index -= 1
+        self.play_video()
 
     def play_video(self):
         self.player.stop()

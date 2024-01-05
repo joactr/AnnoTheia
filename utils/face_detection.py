@@ -101,29 +101,24 @@ def _detect_suitable_faces(video_path, image, face_detector, face_aligner, min_f
     face_boundings = []
     face_landmarks = []
 
-    try:
-        if len(detections) > 0:
-            for face_idx, bb in enumerate(detections):
-                left, top, right, bottom = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
+    if len(detections) > 0:
+        for face_idx, bb in enumerate(detections):
+            left, top, right, bottom = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
 
-                # -- only faces that do satisfy the size condition
-                if right - left >= min_face_size and bottom - top >= min_face_size:
+            # -- only faces that do satisfy the size condition
+            if right - left >= min_face_size and bottom - top >= min_face_size:
 
-                    # -- scaling faces to a specific dimension
-                    resized_face = cv2.resize(
-                        image[max(top, 0):bottom, max(left, 0):right],
-                        (112, 112),
-                    )
-                     # -- converting faces to grayscale images
-                    grayscale_face = cv2.cvtColor(resized_face, cv2.COLOR_BGR2GRAY)
+                # -- scaling faces to a specific dimension
+                resized_face = cv2.resize(
+                    image[max(top, 0):bottom, max(left, 0):right],
+                    (112, 112),
+                )
+                # -- converting faces to grayscale images
+                grayscale_face = cv2.cvtColor(resized_face, cv2.COLOR_BGR2GRAY)
 
-                    # -- adding suitable detected faces
-                    face_crops.append( grayscale_face )
-                    face_boundings.append( (left, top, right, bottom) )
-                    face_landmarks.append( predictions[face_idx] )
+                # -- adding suitable detected faces
+                face_crops.append( grayscale_face )
+                face_boundings.append( (left, top, right, bottom) )
+                face_landmarks.append( predictions[face_idx] )
 
-        return face_crops, face_boundings, face_landmarks
-
-    except:
-        cprint(f"(Face Detection) Something wrong happened, the video clip {video_path} might be corrupted", "red", attrs=["bold", "reverse"])
-        print(traceback.format_exc())
+    return face_crops, face_boundings, face_landmarks
