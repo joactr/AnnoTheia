@@ -3,7 +3,7 @@ import numpy as np
 from termcolor import cprint
 from collections import defaultdict
 
-def detect_multiple_faces(video_path, face_detector, face_alignment=None, min_face_size=32, max_face_distance_thr=50):
+def detect_multiple_faces(video_path, face_detector, face_aligner=None, min_face_size=32, max_face_distance_thr=50):
     """Detects multiple faces on the scene controlling the identity of each person.
     Args:
         video_path (str): path where the video clip is stored.
@@ -39,7 +39,7 @@ def detect_multiple_faces(video_path, face_detector, face_alignment=None, min_fa
         print(f"\t\tProcessing frame {str(frame_count+1).zfill(4)} of {str(total_nframes).zfill(4)}", end="\r")
 
         # -- -- detecting all faces on the frame alognside their corresponding bounding boxes
-        face_crops, face_boundings, face_landmarks = _detect_suitable_faces(video_path, frame, face_detector, min_face_size)
+        face_crops, face_boundings, face_landmarks = _detect_suitable_faces(video_path, frame, face_detector, face_aligner, min_face_size)
 
         # -- -- if they are the first faces detected
         if not are_there_faces:

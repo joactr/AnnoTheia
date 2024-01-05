@@ -7,20 +7,20 @@ scene_detection_conf:
 face_detection: retina
 face_detection_conf:
   threshold: 0.8
-  device: "cuda:0"
+  device: "cpu"
   model_id: "resnet50"
 
 # --face alignment
 face_alignment: fan
 face_alignment_conf:
-  device: "cuda:0"
+  device: "cpu"
   model_id: "2dfan2_alt"
 
 # -- active speaker detection
 active_speaker_detection: talknet
 active_speaker_detection_conf:
   checkpoint_path: "./modules/active_speaker_detection/talknet_asd/weights/spanish_talknetasd_51frames.pth"
-  device: "cuda:0"
+  device: "cpu"
 
 # -- automatic speech recognition
 automatic_speech_recognition: whisper
