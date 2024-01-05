@@ -64,16 +64,22 @@ python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
 <div align="center">
   
 ✅ English 🇬🇧 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-✅ Spanish 🇪🇸 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-⬜ Romanian 🇷🇴 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+✅ Spanish 🇪🇸 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Czech 🇨🇿 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ⬜ Kalanga 🇿🇼 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ⬜ Polish 🇵🇱 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
 ⬜ Turkish 🇹🇷 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-⬜ Vietnamese 🇻🇳 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ⬜ Japanase 🇯🇵 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Fijian 🇫🇯 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ⬜ Malay 🇲🇾 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ⬜ Somali 🇸🇴 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+⬜ Romanian 🇷🇴 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Vietnamese 🇻🇳 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Berber 🇲🇦 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Quechua 🇵🇪 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+⬜ Māori 🇳🇿 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
 ⬜ Norwegian 🇳🇴 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ⬜ Hindi 🇮🇳 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -83,7 +89,7 @@ python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
 
 </div>
 
-🌟 Help us cover languages around the world 🗺️! It will be a great contribution to the research community to move towards a fairer development of speech technologies. Take a look at our tutorial on [How Can I Prepare AnnoTheia for My Language of Interest?]()!
+🌟 Help us cover languages around the world 🗺️! It will be a great contribution to the research community to move towards a fairer development of speech technologies. Take a look at our tutorial on [How Can I Prepare AnnoTheia for the Language I am Interested On?]()!
 
 ## <a name="citation"></a> 📖 Citation
 If you found our work useful, please cite our paper:
