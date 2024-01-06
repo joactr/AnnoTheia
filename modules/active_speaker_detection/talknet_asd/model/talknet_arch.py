@@ -10,12 +10,9 @@ class TalkNetArch(nn.Module):
         super(TalkNetArch, self).__init__()
 
         # Visual Temporal Encoder
-        self.visualFrontend  = VisualFrontend() # Visual Frontend
-        # self.visualFrontend.load_state_dict(torch.load('visual_frontend.pt', map_location="cuda"))
-        # for param in self.visualFrontend.parameters():
-        #     param.requires_grad = False
-        self.visualTCN = VisualTCN()      # Visual Temporal Network TCN
-        self.visualConv1D = VisualConv1D()   # Visual Temporal Network Conv1d
+        self.visualFrontend  = VisualFrontend()
+        self.visualTCN = VisualTCN()
+        self.visualConv1D = VisualConv1D()
 
         # Audio Temporal Encoder
         self.audioEncoder  = AudioEncoder(layers = [3, 4, 6, 3],  num_filters = [16, 32, 64, 128])
