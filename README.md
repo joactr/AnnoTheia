@@ -11,6 +11,7 @@
 [🛠️ Preparation](#preparation) |
 [🚀 Get on with it!](#getonwithit) |
 [💕 How can I help?](#helping) |
+[🦒 Database Zoo](#databasezoo) |
 [📖 Citation](#citation) |
 [📝 License](#license)
 </div>
@@ -100,6 +101,11 @@ python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
 </div>
 
 🌟 Help us cover languages around the world 🗺️! It will be a great contribution to the research community to move towards a fairer development of speech technologies. Take a look at our tutorial on [How Can I Prepare AnnoTheia for the Language I am Interested On?]()!
+
+## <a name="databasezoo"></a> 🦒 Database Zoo
+
+- 🇪🇸 **LIP-RTVE**: [An Audio-Visual for Continuous Spanish in the Wild](https://aclanthology.org/2022.lrec-1.294/)
+- *Place for your future database :)*
 
 ## <a name="citation"></a> 📖 Citation
 If you found our work useful, please cite our paper:
