@@ -19,7 +19,7 @@
 
 ## <a name="intro"></a> 📘 Introduction
 
-- **Motivation.** More than 7,000 known languages are spoken around the world. However, only a small fraction of them are currently covered by speech technologies. In addition, if that weren't enough, many of these languages are considered endangered and the lack of support from current technologies may contribute negatively to this situation. For this reason, to avoid any type of discrimination or exclusion, we encourage people to contribute to this research project whose purpose is to cover the greatest possible number of languages in the context of audio-visual speech technologies. 🌟 **Wouldn't you like to make the table shown below larger?** 🌟 Find more information about in our [💕 How can I help?](#helping) section.
+- **Motivation.** More than 7,000 known languages are spoken around the world. However, only a small fraction of them are currently covered by speech technologies. In addition, if that weren't enough, many of these languages are considered endangered and the lack of support from current technologies may contribute negatively to this situation. For this reason, to avoid any type of discrimination or exclusion, we encourage people to contribute to this research project whose purpose is to cover the greatest possible number of languages in the context of audio-visual speech technologies. 🌟 **Wouldn't you like to make the table shown below larger?** Find more information about in our [💕 How can I help?](#helping) section.
 
 <div align="center"> <img src="doc/image/databases.png" width="720"> </div>
 
@@ -62,6 +62,12 @@ python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
 🌟 We plan to unify both stages. Any comments or suggestions in this regard will be of great help! 🌟
 
 ## <a name="helping"></a> 💕 How can I help?
+
+<a href="https://www.nature.com/articles/s41559-021-01604-y">Many of the world’s languages are in danger of disappearing.</a> Our hope is to encourage the community to promote research in the field of audiovisual speech technologies for low-resource languages. It will be a long road but here we explain three ways to help our project:
+
+- **Fine-Tuning TalkNet-ASD for specific Language.**
+- **Collecting New Audio-Visual Databases.**
+- **Sharing the AnnoTheia's toolkit to your Colleagues.**
 
 ### How many languages are we currently covering?
 
