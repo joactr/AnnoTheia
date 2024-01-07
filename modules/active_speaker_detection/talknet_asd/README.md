@@ -52,13 +52,17 @@ In this section, we are going to prepare all the things we need to fine-tune our
 - **Extracting Face Crops.** Running the following script we will obtain the 112x112 face crops TalkNet-ASD is expecting:
 
 ```
-python ./scripts/extract_face_crops.py --video-dir ./videos_swahili/ --face-crops-output-dir ./data/swahili/face_crops/
+python ./scripts/extract_face_crops.py \
+    --video-dir ./videos_swahili/ \
+    --face-crops-output-dir ./data/swahili/face_crops/
 ```
 
 - **Extracting MFCCs.** Running the following script we will extract the 13 Mel Frequency Cepstral Coefficients (MFCCs) at 100fps TalkNet-ASD is expecting:
 
 ```
-python ./scripts/extract_mfccs.py --video-dir ./videos_swahili/ --mfccs-output-dir ./data/swahili/mfccs/
+python ./scripts/extract_mfccs.py \
+    --video-dir ./videos_swahili/ \
+    --mfccs-output-dir ./data/swahili/mfccs/
 ```
 ✨ **Detail:** Both the face crops and MFCCs are stored following the directory structure described above.
 
@@ -67,7 +71,9 @@ python ./scripts/extract_mfccs.py --video-dir ./videos_swahili/ --mfccs-output-d
 - **Creating Window-Level Dataset Splits.** Using this script we will get the training, validation, and test dataset splits at window level we need to estimate our TalkNet-ASD model. Note that the ```--windows-per-sample``` refers to the number of windows we will consider for each video clip in the database.
 
 ```
-python ./scripts/create_window_dataset_splits.py --face-crops-dir ./data/swahili/face_crops/ --splits-output-dir ./data/swahili/splits/
+python ./scripts/create_window_dataset_splits.py \
+    --face-crops-dir ./data/swahili/face_crops/ \
+    --splits-output-dir ./data/swahili/splits/
 ```
 
 ✨ **Details:** This is how our dataset splits look:
@@ -95,22 +101,16 @@ we  will fine-tune the pre-trained TalkNet-ASD for English, a model that was tra
 ## 💕 Share it!
 
 - **Do a Pull Request.** Different aspects to take into account:
-    - Create a new config file for your language ```./configs/annotheia_pipeline_swahili.yaml```. You only will have to change [this line](https://github.com/joactr/AnnoTheia/blob/david-branch/configs/annotheia_pipeline_english.yaml#L22) w.r.t. the english configuration.
-    - Upload your model checkpoint, e.g., in [Zenodo](https://zenodo.org/). Then, using a comment, add the link into the config file you just created.
+    - Upload your model checkpoint, e.g., in [Zenodo](https://zenodo.org/).
+    - Create a new config file for your language. You only will have to:
+        - change [this line](https://github.com/joactr/AnnoTheia/blob/david-branch/configs/annotheia_pipeline_english.yaml#L22) specifying the new model checkpoint.
+        - add a coment to the link where the future user can find and download the new model checkpoint.
     - Ask for the Pull Request.
 - **Create an Issue** in case of doubts. No worries :)
 
-## 📝 Citation
-If you find useful this tutorial, **please cite the original work** where TalkNet-ASD was presented:
+## 🔭 Next Step
 
-```
-@inproceedings{tao2021someone,
-  title={Is Someone Speaking? Exploring Long-term Temporal Features for Audio-visual Active Speaker Detection},
-  author={Tao, Ruijie and Pan, Zexu and Das, Rohan Kumar and Qian, Xinyuan and Shou, Mike Zheng and Li, Haizhou},
-  booktitle={Proceedings of the 29th ACM International Conference on Multimedia},
-  pages={3927–3935},
-  year={2021},
-}
-```
+- **Compile a new audio-visual database for your language**
+- **Include it in our 🦒 Database Zoo Section**
 
 
