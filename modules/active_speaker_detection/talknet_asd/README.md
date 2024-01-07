@@ -64,14 +64,18 @@ python ./scripts/extract_mfccs.py --video-dir ${PATH_TO_VIDEO_DIR}
 
 🌟 **Another Detail:** For efficiency reasons, both faces and MFCCs are saved as compressed ```.npz``` files using the ```numpy``` library.
 
-- **Creating Window-Level Dataset Splits.** Using this script we will get the training, validation, and test dataset splits at window level we need to estimate our TalkNet-ASD model. Note that the ```--windows-per-sample``` refers to the maximum number of windows we will consider for each video clip in the database.
+- **Creating Window-Level Dataset Splits.** Using this script we will get the training, validation, and test dataset splits at window level we need to estimate our TalkNet-ASD model. Note that the ```--windows-per-sample``` refers to the number of windows we will consider for each video clip in the database.
 
 ```
 python ./scripts/create_window_dataset_splits.py --face-crops-dir ${PATH_TO_FACE_CROPS_DIR}
 ```
-🌟 **Detail:** This is how our dataset splits look:
+🌟 **Details:** This is how our dataset splits look:
 
-<div align="center"> <img src="doc/image/dataset_split.png"> </div>
+<div align="center"> <img src="../../../doc/image/dataset_split.png"> </div>
+
+where each row corresponds to one window sample and the `video_window_center` column indicates the index in the face crop sequence where the center of the window sample will be. Depending on the `label`, we will have **positive** or **negative** samples. Find below an image explaining the different three type of samples we designed. Of course, you can find more information [in our paper 📃]().
+
+
 
 ## 📝 Citation
 If you find interesting this tutorial, **please cite the original work** where TalkNet-ASD was presented:
