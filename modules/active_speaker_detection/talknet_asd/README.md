@@ -11,6 +11,22 @@ As you could expect, the first thing we need is data. This is the most complicat
 - **How many data do we need?** → Of course, the more, the better. However, **please note that this ASD models work at window level** and usually these windows do not span more than 2 seconds. So the good news is that from a small number of vlogs we will be able to extract hundreds of window samples to estimate our TalkNet-ASD model.
 - **Anything else?** → Try to collect as many different speakers as possible to estimate a model robust against people it has never seen.
 
+Once you have collected your data (Congratulations👏!), in order to run the scripts described in the following steps of this tutorial, please **organize your videos like** this structure scheme:
+
+```
+videos_for_spanish/
+├── speaker000/
+│   ├── speaker000_0000.mp4
+│   ├── speaker000_0001.mp4
+│   ├── ...
+├── speaker001/
+│   ├── speaker001_0000.mp4
+│   ├── speaker001_0001.mp4
+│   ├── ...
+```
+
+## 🛠️ Data Preparation
+
 ## 📝 Citation
 If you find interesting this tutorial, **please cite the original work** where TalkNet-ASD was presented:
 
