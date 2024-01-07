@@ -71,6 +71,7 @@ python ./scripts/create_window_dataset_splits.py --face-crops-dir ${PATH_TO_FACE
 ```
 🌟 **Detail:** This is how our dataset splits look:
 
+<div align="center"> <img src="doc/image/dataset_split.png"> </div>
 
 ## 📝 Citation
 If you find interesting this tutorial, **please cite the original work** where TalkNet-ASD was presented:
