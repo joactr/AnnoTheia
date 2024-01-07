@@ -104,7 +104,7 @@ python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
 
 ## <a name="databasezoo"></a> 🦒 Database Zoo
 
-- 🇪🇸 **LIP-RTVE**: [An Audio-Visual for Continuous Spanish in the Wild](https://aclanthology.org/2022.lrec-1.294/)
+- 🇪🇸 **LIP-RTVE**: [An Audio-Visual Database for Continuous Spanish in the Wild](https://aclanthology.org/2022.lrec-1.294/)
 - *Place for your future database :)*
 
 ## <a name="citation"></a> 📖 Citation
