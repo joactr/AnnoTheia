@@ -9,7 +9,7 @@ As you could expect, the first thing we need is data. This is the most complicat
 - **What do we need?** → Videos where only one person appears on scene and is speaking
 - **Where can we find these types of videos?** → One way is to search social media for the most popular vloggers who upload videos in the language of your interest.
 - **How many data do we need?** → Of course, the more, the better. However, **please note that this ASD models work at window level** and usually these windows do not span more than 2 seconds. So the good news is that from a small number of vlogs we will be able to extract hundreds of window samples to estimate our TalkNet-ASD model.
-- **Anything else?** → Try to collect as many different speakers as possible in order to estimate a model robust against people it has never seen.
+- **Anything else?** → Try to collect as many different speakers as possible to estimate a model robust against people it has never seen.
 
 ## 📝 Citation
 If you find interesting this tutorial, **please cite the original work** where TalkNet-ASD was presented:
