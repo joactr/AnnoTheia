@@ -62,8 +62,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract the 112x112 face crops TalkNet-ASD is expecting.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--cuda-device", type=str, default="cuda:0")
     parser.add_argument("--video-dir", required=True, type=str)
-    parser.add_argument("--left-index", type=int, default=0)
-    parser.add_argument("--right-index", type=int, default=961)
     parser.add_argument("--mean-face-path", type=str, default="./scripts/20words_mean_face.npy")
     parser.add_argument("--face-crops-output-dir", required=True, type=str)
     args = parser.parse_args()

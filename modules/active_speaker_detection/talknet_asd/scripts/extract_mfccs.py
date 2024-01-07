@@ -33,6 +33,20 @@ def process_wav(video_path):
         winstep=0.010,
    )
 
+   # -- audiovisual temproral alignment
+   face_crops_seq = np.load(face_crop_path)["data"]
+
+   # -- assuming video at 25fps and audio at 100fps
+   max_mfccs_length = face_crops_seq.shape[0] * 4
+
+   # -- if it smaller, we apply padding
+   if mfccs.shape[0] < max_mfccs_length:
+       pad_amount = max_mfccs_length - mfccs.shape[0]
+       mfccs = np.pad(mfccs, ((0,pad_amount), (0,0)), 'wrap')
+
+   # contrary, we cut the tail of the sequence
+   mfccs = mfccs[:max_mfccs_length, :]
+
    # -- saving MFCCs in a compressed npz file
    np.savez_compressed(output_path, data=np.array(mfccs))
 
@@ -43,8 +57,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extracting the 13-component MFCCs TalkNet-ASD is expecting.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--cuda-device", type=str, default="cuda:0")
     parser.add_argument("--video-dir", required=True, type=str)
-    parser.add_argument("--left-index", type=int, default=0)
-    parser.add_argument("--right-index", type=int, default=961)
+    parser.add_argument("--face-crops-dir", required=True, type=str)
     parser.add_argument("--mfccs-output-dir", required=True, type=str)
     args = parser.parse_args()
 
@@ -65,6 +78,7 @@ if __name__ == "__main__":
             speaker_dir = os.path.join(dataset_dir, speaker)
             videos = sorted(os.listdir(speaker_dir))
             for video in tqmd(videos):
+                face_crop_path = os.path.join(args.face_crops_dir, dataset, speaker, video.split(".")[0]+".npz")
                 output_path = os.path.join(output_speaker_dir, video.split(".")[0]+".npz")
                 video_path = os.path.join(speaker_dir, video)
 
