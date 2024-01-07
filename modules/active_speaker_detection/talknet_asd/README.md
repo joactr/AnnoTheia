@@ -62,6 +62,7 @@ python ./scripts/extract_face_crops.py \
 ```
 python ./scripts/extract_mfccs.py \
     --video-dir ./videos_swahili/ \
+    --face-crops-dir ./data/swahili/face_crops/ \
     --mfccs-output-dir ./data/swahili/mfccs/
 ```
 ✨ **Detail:** Both the face crops and MFCCs are stored following the directory structure described above.
