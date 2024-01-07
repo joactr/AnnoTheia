@@ -60,7 +60,8 @@ python ./scripts/extract_face_crops.py --video-dir ${PATH_TO_VIDEO_DIR}
 ```
 python ./scripts/extract_mfccs.py --video-dir ${PATH_TO_VIDEO_DIR}
 ```
-🌟 **Detail:** Both the face crops and MFCCs are stored following the directory structure described above but data is saved as compressed ```.npz``` files.
+🌟 **Detail:** Both the face crops and MFCCs are stored following the directory structure described above.
+🌟 **Another Detail:** due to efficiency purposes, both face and MFCCs are saved as compressed ```.npz``` files using the ```numpy``` library.
 
 
 ## 📝 Citation
