@@ -55,7 +55,7 @@ python main_scenes.py \
     --output-dir ${PATH_TO_OUTPUT_DIR}
 ```
 
-- **Supervise & Annotate** the candidate scenes detected by the toolkit. Once the previous script warns you about a completed long video:
+- **Supervise & Annotate** the candidate scenes detected by the toolkit. Once the script above warns you that a video has been fully processed, you can run the following command:
 
 ```
 python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
