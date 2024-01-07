@@ -14,6 +14,7 @@ def process_video(video_path):
     videoID = video_path.split(os.sep)[-1].split(".")[0]
     frame_generator = load_video(video_path)
 
+    # -- do not continue if the video was already processed
     if os.path.exists(output_path):
         print(f"Video {video_path} has already been processed.")
     else:
@@ -28,6 +29,7 @@ def process_video(video_path):
             print(f"\tProcessing frame {frame_idx} from video {videoID}", end="\r")
             detected_faces = face_detector(frame, rgb=False)
 
+            # -- face detection frame by frame. In case no face is found, we add a matrix of zeros
             if len(detected_faces) == 0:
                 face_sequence.append( np.zeros((112, 112, 3)) )
             else:
@@ -53,10 +55,11 @@ def process_video(video_path):
 
             frame_idx += 1
 
+        # -- saving the face crop sequence in a compressed npz file
         np.savez_compressed(output_path, data=np.array(face_sequence))
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Detecting faces and facial landmarks from videos.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description="Extract the 112x112 face crops TalkNet-ASD is expecting.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--cuda-device", type=str, default="cuda:0")
     parser.add_argument("--video-dir", required=True, type=str)
     parser.add_argument("--left-index", type=int, default=0)
@@ -79,19 +82,19 @@ if __name__ == "__main__":
     os.makedirs(args.face_crops_output_dir, exist_ok=True)
 
     datasets = sorted(os.listdir(args.video_dir))
-    for dataset in datasets:
+    for dataset in tqdm(datasets, leave=False):
         output_dataset_dir = os.path.join(args.face_crops_output_dir, dataset)
         os.makedirs(output_dataset_dir, exist_ok=True)
 
         dataset_dir = os.path.join(args.video_dir, dataset)
         speakers = sorted(os.listdir(dataset_dir))
-        for speaker in speakers:
+        for speaker in tqdm(speakers, leave=False):
             output_speaker_dir = os.path.join(output_dataset_dir, speaker)
             os.makedirs(output_speaker_dir, exist_ok=True)
 
             speaker_dir = os.path.join(dataset_dir, speaker)
             videos = sorted(os.listdir(speaker_dir))
-            for video in videos:
+            for video in tqdm(videos):
                 output_path = os.path.join(output_speaker_dir, video.split(".")[0]+".npz")
                 video_path = os.path.join(speaker_dir, video)
 
