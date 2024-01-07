@@ -23,7 +23,7 @@ As you could expect, the first thing we need is data. This is the most complicat
 Once you have collected your data (Congratulations👏!), in order to run the scripts described in the following steps of this tutorial, please **organize your videos like** this structure scheme:
 
 ```
-videos_for_spanish/
+videos_swahili/
 ├── training/
 │   ├── speaker000/
 │   │   ├── speaker000_0000.mp4
@@ -52,13 +52,13 @@ In this section, we are going to prepare all the things we need to fine-tune our
 - **Extracting Face Crops.** Running the following script we will obtain the 112x112 face crops TalkNet-ASD is expecting:
 
 ```
-python ./scripts/extract_face_crops.py --video-dir ${PATH_TO_VIDEO_DIR}
+python ./scripts/extract_face_crops.py --video-dir ./videos_swahili/ --face-crops-output-dir ./data/swahili/face_crops/
 ```
 
 - **Extracting MFCCs.** Running the following script we will extract the 13 Mel Frequency Cepstral Coefficients (MFCCs) at 100fps TalkNet-ASD is expecting:
 
 ```
-python ./scripts/extract_mfccs.py --video-dir ${PATH_TO_VIDEO_DIR}
+python ./scripts/extract_mfccs.py --video-dir ./videos_swahili/ --mfccs-output-dir ./data/swahili/mfccs/
 ```
 ✨ **Detail:** Both the face crops and MFCCs are stored following the directory structure described above.
 
@@ -67,7 +67,7 @@ python ./scripts/extract_mfccs.py --video-dir ${PATH_TO_VIDEO_DIR}
 - **Creating Window-Level Dataset Splits.** Using this script we will get the training, validation, and test dataset splits at window level we need to estimate our TalkNet-ASD model. Note that the ```--windows-per-sample``` refers to the number of windows we will consider for each video clip in the database.
 
 ```
-python ./scripts/create_window_dataset_splits.py --face-crops-dir ${PATH_TO_FACE_CROPS_DIR}
+python ./scripts/create_window_dataset_splits.py --face-crops-dir ./data/swahili/face_crops/ --splits-output-dir ./data/swahili/splits/
 ```
 
 ✨ **Details:** This is how our dataset splits look:
@@ -78,8 +78,30 @@ where each row corresponds to one window sample and the `video_window_center` co
 
 <div align="center"> <img src="../../../doc/image/window_sampling_annotheia.png" width=712> </div>
 
+## 🔮 Fine-Tuning TalkNet-ASD
+
+It is time to fine-tune our TalkNet-ASD to our language 💕! Running the following script:
+
+```
+python ./main_train.py \
+    --training-dataset ./data/swahili/splits/training.csv \
+    --validation-dataset ./data/swahili/splits/validation.csv \
+    --test-dataset ./data/swahili/splits/test.csv \
+    --output-dir ./data/swahili/exps/
+```
+
+we  will fine-tune the pre-trained TalkNet-ASD for English, a model that was trained on the [AVA-ActiveSpeaker dataset](https://ieeexplore.ieee.org/document/9053900). If you want to explore more hyper-parameters, you can always run: ```python ./main_train.py --help```.
+
+## 💕 Share it!
+
+- **Do a Pull Request.** Different aspects to take into account:
+    - Create a new config file for your language ```./configs/annotheia_pipeline_swahili.yaml```. You only will have to change [this line](https://github.com/joactr/AnnoTheia/blob/david-branch/configs/annotheia_pipeline_english.yaml#L22) w.r.t. the english configuration.
+    - Upload your model checkpoint, e.g., in [Zenodo](https://zenodo.org/). Then, using a comment, add the link into the config file you just created.
+    - Ask for the Pull Request.
+- **Create an Issue** in case of doubts. No worries :)
+
 ## 📝 Citation
-If you find interesting this tutorial, **please cite the original work** where TalkNet-ASD was presented:
+If you find useful this tutorial, **please cite the original work** where TalkNet-ASD was presented:
 
 ```
 @inproceedings{tao2021someone,
