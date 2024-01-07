@@ -60,7 +60,7 @@ python main_scenes.py \
 ```
 python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
 ```
-🌟 We plan to unify both stages. Any comments or suggestions in this regard will be of great help! 🌟
+🌟 We plan to unify both stages. Any comments or suggestions in this regard will be of great help!
 
 ## <a name="helping"></a> 💕 How can I help?
 
