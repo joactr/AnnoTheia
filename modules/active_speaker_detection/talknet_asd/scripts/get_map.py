@@ -17,7 +17,6 @@ import logging
 import time, warnings
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 warnings.filterwarnings("ignore")
 
 def compute_average_precision(precision, recall):
@@ -41,7 +40,7 @@ def compute_average_precision(precision, recall):
   if not isinstance(precision, np.ndarray) or not isinstance(
       recall, np.ndarray):
     raise ValueError("precision and recall must be numpy array")
-  if precision.dtype != np.float or recall.dtype != np.float:
+  if precision.dtype != float or recall.dtype != float:
     raise ValueError("input must be float numpy array.")
   if len(precision) != len(recall):
     raise ValueError("precision and recall must be of the same size.")
@@ -126,11 +125,11 @@ def calculate_precision_recall(df_merged):
 
 def run_evaluation(predictions):
   """Runs AVA Active Speaker evaluation, printing average precision result."""
-  column_names = ["uid", "Unnamed: 0", "video", "audio", "label", "center", "pred", "posScore"]
+  column_names = ["uid", "video_id", "audio_id", "label", "video_window_center", "pred", "score"]
   df_loaded = load_csv(
       predictions,
       column_names=column_names)
-  df_loaded = df_loaded.sort_values(by=["posScore"], ascending=False).reset_index()
+  df_loaded = df_loaded.sort_values(by=["score"], ascending=False).reset_index()
   precision, recall = calculate_precision_recall(df_loaded)
   mAP = 100 * compute_average_precision(precision, recall)
   print("average precision: %2.2f%%"%(mAP))
@@ -138,11 +137,11 @@ def run_evaluation(predictions):
 
 def evaluate_pycall(df_loaded):
   """Runs AVA Active Speaker evaluation, printing average precision result."""
-  column_names = ["uid","label","pred","posScore"]
-  df_loaded = df_loaded.sort_values(by=["posScore"], ascending=False).reset_index()
+  column_names = ["uid","label","pred","score"]
+  df_loaded = df_loaded.sort_values(by=["score"], ascending=False).reset_index()
   precision, recall = calculate_precision_recall(df_loaded)
   mAP = 100 * compute_average_precision(precision, recall)
-  print("average precision: %2.2f%%"%(mAP))
+
   return mAP
 
 

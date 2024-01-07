@@ -1,99 +1,108 @@
-import time, os, torch, argparse, warnings, glob
+import warnings
+warnings.filterwarnings("ignore")
 
-#from dataLoader import train_loader, val_loader
-from utils.tools import *
-from talkNet import talkNet
-from dataset import MyDataset
+import os
+import glob
+import time
+import torch
+import argparse
+
 from torch.utils.data import DataLoader
+from datasets.talknet_dataset import TalkNetDataset
 
-def main():
-    # The structure of this code is learnt from https://github.com/clovaai/voxceleb_trainer
-    warnings.filterwarnings("ignore")
+from model.talknet_model import TalkNetModel
 
-    parser = argparse.ArgumentParser(description = "TalkNet Training")
-    # Training details
-    parser.add_argument('--lr',           type=float, default=0.0001,help='Learning rate') #0.0001
-    parser.add_argument('--lrDecay',      type=float, default=0.95,  help='Learning rate decay rate')
-    parser.add_argument('--maxEpoch',     type=int,   default=10,    help='Maximum number of epochs')
-    parser.add_argument('--testInterval', type=int,   default=1,     help='Test and save every [testInterval] epochs')
-    parser.add_argument('--batchSize',    type=int,   default=2500,  help='Dynamic batch size, default is 2500 frames, other batchsize (such as 1500) will not affect the performance')
-    parser.add_argument('--windowSize',      type=float, default=25,  help='Number of frames of input winfow')
-    parser.add_argument('--nDataLoaderThread', type=int, default=4,  help='Number of loader threads')
-    # Data path
-    parser.add_argument('--savePath',     type=str, default="exps/exp1")
-    # Data selection
-    parser.add_argument('--evalDataType', type=str, default="val", help='Only for AVA, to choose the dataset for evaluation, val or test')
-    parser.add_argument('--evaluation',      dest='evaluation', action='store_true', help='Only do evaluation by using pretrained model [pretrain_AVA.model]')
+if __name__ == "__main__":
+
+    # -- argument parser
+    parser = argparse.ArgumentParser(
+        description = "Script for the training & evaluation of TalkNet-ASD",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    # -- settings
+    parser.add_argument("--device", default="cuda:0", type=str, help="Select the device.")
+    parser.add_argument("--run-mode", default="training", type=str, help="Choose between 'training' or 'evaluation'")
+    parser.add_argument("--load-model", default="./weights/english_talknetasd_ava_dataset.pth", type=str, help="Path to the checkpoint that has to be loaded into the model")
+
+    # -- training details
+    parser.add_argument('--learning-rate', default=0.0001, type=float, help='Learning rate')
+    parser.add_argument('--lr-decay', default=0.95, type=float, help='Learning rate decay rate')
+    parser.add_argument('--total-epochs', default=10, type=int, help='Maximum number of epochs')
+    parser.add_argument('--batch-size', default=32, type=int, help='Batch Size')
+    parser.add_argument('--window-size', default=25, type=int, help='Number of frames of input winfow')
+    parser.add_argument('--n-workers', default=8, type=int, help='Number of loader threads')
+    # -- dataset splits
+    parser.add_argument("--training-dataset", default="", type=str, help="Path to where the training dataset split is")
+    parser.add_argument("--validation-dataset", default="", type=str, help="Path to where the validation dataset split is")
+    parser.add_argument("--test-dataset", default="", type=str, help="Path to where the test dataset split is")
+    # -- output directories
+    parser.add_argument('--output-dir', default="./talknet_exps/spanish/", type=str, help="Output directory where checkpoints and evaluations will be stored")
     args = parser.parse_args()
-    # Data loader
-    # if args.downloadAVA == True:
-    #     preprocess_AVA(args)
-    #     quit()
 
-    # loader = train_loader(trialFileName = args.trainTrialAVA, \
-    #                       audioPath      = os.path.join(args.audioPathAVA , 'train'), \
-    #                       visualPath     = os.path.join(args.visualPathAVA, 'train'), \
-    #                       **vars(args))
-    # trainLoader = torch.utils.data.DataLoader(loader, batch_size = 1, shuffle = True, num_workers = args.nDataLoaderThread)
+    # -- creating datasets
+    train_dataset = TalkNetDataset(args.training_dataset, args.window_size)
+    validation_dataset = TalkNetDataset(args.validation_dataset, args.window_size)
+    test_dataset = TalkNetDataset(args.test_dataset, args.window_size)
 
-    # loader = val_loader(trialFileName = args.evalTrialAVA, \
-    #                     audioPath     = os.path.join(args.audioPathAVA , args.evalDataType), \
-    #                     visualPath    = os.path.join(args.visualPathAVA, args.evalDataType), \
-    #                     **vars(args))
-    # valLoader = torch.utils.data.DataLoader(loader, batch_size = 1, shuffle = False, num_workers = 16)
-    videoDir = "C:/Users/jmmol/Desktop/COSAS V7/TFM/npz"
-    audioDir = "C:/Users/jmmol/Desktop/COSAS V7/TFM/mfccs"
-    datasetTrain = MyDataset(int(args.windowSize),videoDir,audioDir,"trainSamples.csv")
-    datasetTest = MyDataset(int(args.windowSize),videoDir,audioDir,"devSamples.csv")
-    
+    # -- defining data loaders
+    train_loader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=args.batch_size, num_workers=args.n_workers)
+    validation_loader = DataLoader(dataset=validation_dataset, shuffle=False, batch_size=args.batch_size, num_workers=args.n_workers)
+    test_loader = DataLoader(dataset=test_dataset, shuffle=False, batch_size=args.batch_size, num_workers=args.n_workers)
 
-    trainLoader = DataLoader(dataset=datasetTrain,shuffle=True,batch_size=32,num_workers=14) #Cambiar num_workers
-    valLoader = DataLoader(dataset=datasetTest,shuffle=False,batch_size=32,num_workers=14) #Cambiar num_workers
-    lr_ini = args.lr
-    total_epoch = args.maxEpoch
 
-    if args.evaluation == True:
-        datasetTest = MyDataset(int(args.windowSize),videoDir,audioDir,"testSamples.csv")
-        testLoader = DataLoader(dataset=datasetTest,shuffle=False,batch_size=32,num_workers=14) #Cambiar num_workers
-        s = talkNet(**vars(args))
-        s.load_parameters(r"C:\Users\jmmol\Desktop\COSAS V7\TFM\exps\exp1\model\model13_0006.model")
-        #s.loadParameters(r'C:\Users\jmmol\Desktop\COSAS V7\TFM\exps\exp1\model\model21_0005.model')
-        print("Model %s loaded from previous state!"%('pretrain_AVA.model'))
-        testLoss, testACC, testmap = s.evaluate_network(loader = testLoader, **vars(args))
-        print("Loss en test: %2.2f%%, ACC %2.2f%%, mAP: %2.2f%%"%(testLoss, testACC, testmap))
-        quit()
+    # -- building and pre-training the TalkNet-ASD model
+    talknet_asd = TalkNetModel(**vars(args)); print(talknet_asd)
+    print(f"\nLoading TalkNet-ASD from checkpoint: {args.load_model}\n")
+    talknet_asd.load_parameters(args.load_model)
 
-    modelfiles = glob.glob('%s/model_0*.model'%(args.savePath+"/model"))
-    modelfiles.sort()  
-    if len(modelfiles) >= 1:
-        print("Model %s loaded from previous state!"%modelfiles[-1])
-        epoch = int(os.path.splitext(os.path.basename(modelfiles[-1]))[0][6:]) + 1
-        s = talkNet(epoch = epoch, **vars(args))
-        s.loadParameters(modelfiles[-1])
-    else:
-        epoch = 1
-        s = talkNet(epoch = epoch, **vars(args))
+    # -- training process
+    if args.run_mode in ["training"]:
+        # -- creating output directories
+        os.makedirs(os.path.join(args.output_dir, "checkpoints"), exist_ok=True)
+        os.makedirs(os.path.join(args.output_dir, "results"), exist_ok=True)
 
-    mAPs = []
-    scoreFile = open(args.savePath+"/score.txt", "a+")
+        mAPs = {"validation": [], "test": []}
+        for epoch in range(1, args.total_epochs+1):
+            model_output_filename = f"model_{args.window_size}frames_{str(epoch).zfill(3)}.pth"
 
-    while(1):        
-        loss, lr = s.train_network(epoch = epoch, loader = trainLoader, **vars(args))
-        
-        if epoch % args.testInterval == 0:        
-            s.save_parameters(args.savePath+"/model/model%d_%04d.model"%(int(args.windowSize),epoch))
-            testLoss, testACC, testmap = s.evaluate_network(epoch = epoch, loader = valLoader, **vars(args))
-            mAPs.append(testmap)
-            print(time.strftime("%Y-%m-%d %H:%M:%S"), "%d epoch, mAP %2.2f%%, bestmAP %2.2f%%"%(epoch, mAPs[-1], max(mAPs)))
-            scoreFile.write("epoch %d, %d total epochs, LR %f, TRAINLOSS %f, TESTLOSS %f, testACC %2.2f%%, testmAP %2.2f%%, bestTestmAP %2.2f%%\n"%(epoch,total_epoch, lr_ini, loss,testLoss, testACC, mAPs[-1], max(mAPs)))
-            scoreFile.flush()
+            train_loss, lr = talknet_asd.train_network(loader=train_loader, epoch=epoch, **vars(args))
 
-        if epoch >= args.maxEpoch:
-            scoreFile.write("\n")
-            scoreFile.flush()
-            quit()
+            # -- evaluation on validation & test
+            val_output_path = os.path.join(args.output_dir, "results", f"validation_evaluated_from_{model_output_filename.split('.')[0]}.csv")
+            val_loss, val_acc, val_mAP = talknet_asd.evaluate_network(loader = validation_loader, output_path=val_output_path, dataset="validation", **vars(args))
+            mAPs["validation"].append(val_mAP)
 
-        epoch += 1
+            test_output_path = os.path.join(args.output_dir, "results", f"test_evaluated_from_{model_output_filename.split('.')[0]}.csv")
+            test_loss, test_acc, test_mAP = talknet_asd.evaluate_network(loader = test_loader, output_path=test_output_path, dataset="test", **vars(args))
+            mAPs["test"].append(test_mAP)
 
-if __name__ == '__main__':
-    main()
+            print(f"Epoch {epoch}: TRAIN LOSS={round(train_loss, 3)} || VAL mAP={round(val_mAP, 3)}% (best: {max(mAPs['validation'])}%) || TEST mAP={round(test_mAP, 3)}% (best: {max(mAPs['test'])}%)")
+
+            # -- saving epoch checkpoint
+            checkpoint_output_path = os.path.join(
+                args.output_dir,
+                "checkpoints",
+                f"model_{args.window_size}frames_{str(epoch).zfill(3)}.pth",
+            )
+            talknet_asd.save_parameters(checkpoint_output_path)
+
+            print(f"\nPlease find the evaluated results in {os.path.join(args.output_dir, 'results')}")
+
+    # -- evaluation process
+    if args.run_mode in ["evaluation"]:
+        # -- creating output directory
+        os.makedirs(os.path.join(args.output_dir, "evaluation_results"), exist_ok=True)
+
+        mAPs = {"validation": [], "test": []}
+        model_output_filename = args.load_model.split(os.sep)[-1].split(".")[0]
+
+        val_output_path = os.path.join(args.output_dir, "evaluation_results", f"validation_evaluated_from_{model_output_filename.split('.')[0]}.csv")
+        val_loss, val_acc, val_mAP = talknet_asd.evaluate_network(loader = validation_loader, output_path=val_output_path, dataset="validation", **vars(args))
+        mAPs["validation"].append(val_mAP)
+
+        test_output_path = os.path.join(args.output_dir, "evaluation_results", f"test_evaluated_from_{model_output_filename.split('.')[0]}.csv")
+        test_loss, test_acc, test_mAP = talknet_asd.evaluate_network(loader = test_loader, output_path=test_output_path, dataset="test", **vars(args))
+        mAPs["test"].append(test_mAP)
+
+        print(f"[EVALUATION] VAL mAP={round(val_mAP, 3)}% (best: {max(mAPs['validation'])}%) || TEST mAP={round(test_mAP, 3)}% (best: {max(mAPs['test'])}%)")
+        print(f"\nPlease find the evaluated results in {os.path.join(args.output_dir, 'evaluation_results')}")

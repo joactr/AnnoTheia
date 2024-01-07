@@ -1,14 +1,29 @@
+import os
+import sys
+import time
+import subprocess
+import pandas as pd
+from tqdm import tqdm
+from colorama import Fore
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pandas as pd
-import sys, time, numpy, os, subprocess, pandas, tqdm
 
-from modules.active_speaker_detection.talknet_asd.layers.losses import LossAV, LossA, LossV
-from modules.active_speaker_detection.talknet_asd.model.talknet_arch import TalkNetArch
+# -- try-catch needed for the 'Fine-Tuning TalkNet-ASD' tutorial
+try:
+    from modules.active_speaker_detection.talknet_asd.layers.losses import LossAV, LossA, LossV
+except ModuleNotFoundError:
+    from layers.losses import LossAV, LossA, LossV
+
+# -- try-catch needed for the 'Fine-Tuning TalkNet-ASD' tutorial
+try:
+    from modules.active_speaker_detection.talknet_asd.model.talknet_arch import TalkNetArch
+except:
+    from model.talknet_arch import TalkNetArch
 
 class TalkNetModel(nn.Module):
-    def __init__(self, lr = 0.0001, lr_decay = 0.95, device="cpu", **kwargs):
+    def __init__(self, learning_rate=0.0001, lr_decay=0.95, device="cpu", **kwargs):
         super(TalkNetModel, self).__init__()
 
         self.device = device
@@ -20,7 +35,7 @@ class TalkNetModel(nn.Module):
         self.lossV = LossV().to(self.device)
 
         # -- optimizing + scheduler
-        self.optim = torch.optim.Adam(self.parameters(), lr = lr)
+        self.optim = torch.optim.Adam(self.parameters(), lr = learning_rate)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optim, step_size = 1, gamma=lr_decay)
 
     def forward(self, x):
@@ -65,7 +80,7 @@ class TalkNetModel(nn.Module):
         lr = self.optim.param_groups[0]['lr']
 
         # -- training process
-        for batch_idx, (audio_features, visual_features, labels) in enumerate(loader, start=1):
+        for batch_idx, (audio_features, visual_features, labels) in enumerate(tqdm(loader, position=0, leave=True, file=sys.stdout, bar_format="{l_bar}%s{bar:10}%s{r_bar}" % (Fore.GREEN, Fore.RESET)), start=1):
             # -- resetting the optimizer
             self.zero_grad()
 
@@ -97,19 +112,14 @@ class TalkNetModel(nn.Module):
             top1 += prec
             index += len(labels)
 
-            sys.stderr.write(time.strftime("%m-%d %H:%M:%S") + \
-            " [%2d] Lr: %5f, Training: %.2f%%, "    %(epoch, lr, 100 * (batch_idx / loader.__len__())) + \
-            " Loss: %.5f, ACC: %2.2f%% \r"        %(loss/(batch_idx), 100 * (top1/index)))
-            sys.stderr.flush()
-
-        sys.stdout.write("\n")
-
         return loss / batch_idx, lr
 
-    def evaluate_network(self, loader, **kwargs):
+    def evaluate_network(self, loader, output_path, dataset, **kwargs):
         """Evaluate the estimated TalkNet model.
         Args:
             loader (torch.utils.data.DataLoader): data loader containing the data for the evaluation.
+            output_path (str): path where to save the CSV containig the results on the evaluation dataset.
+            dataset (str): string indicating the dataset we are evaluating.
             kwargs (dict): the rest of input arguments useful for the training.
         Returns:
             loss (float): loss obtained by the evaluated model.
@@ -122,7 +132,7 @@ class TalkNetModel(nn.Module):
         pred_scores, pred_labels = [], []
         window_size = kwargs["window_size"]
 
-        for batch_idx, (audio_features, visual_features, labels) in enumerate(tqdm.tqdm(loader)):
+        for batch_idx, (audio_features, visual_features, labels) in enumerate(tqdm(loader, position=0, leave=True, file=sys.stdout, bar_format="{l_bar}%s{bar:10}%s{r_bar}" % (Fore.BLUE, Fore.RESET)), start=1):
             with torch.no_grad():
 
                 # -- audio visual frontend
@@ -152,41 +162,48 @@ class TalkNetModel(nn.Module):
 
         # -- saving evaluation results into a CSV
         precision_eval = 100 * (top1 / index)
-        print("TESTACC:", precision_eval)
 
         # -- we dont remember what we were doing here, but it is working :)
-        evaluation_dataset_path = kwargs["test_dataset"]
-        df = pd.read_csv(evaluation_dataset_path)
+        df = pd.read_csv(kwargs[f"{dataset}_dataset"])
         df = df.loc[df.index.repeat(window_size)].reset_index(drop=True)
 
         # -- extending dataframe to incorporate both the predictions and scores
         df["pred"] = pred_labels
         df["score"] = pred_scores
         df.index.name = 'uid'
-        df.to_csv("testPreds.csv")
+
+        # -- saving new dataset evaluated
+        df.to_csv(output_path)
 
         # -- computing mean Average Precision (mAP)
-        cmd = "python -O get_map.py -p testPreds.csv"
-        mAP = str(subprocess.check_output(cmd)).split(' ')[2][:5]
+        mAP = str(subprocess.check_output([
+            "python",
+            "-O",
+            "./scripts/get_map.py",
+            "-p",
+            output_path,
+        ])).split(' ')[2][:5]
+
         if mAP[-1] == "%": mAP = mAP[:-1]
         mAP = float(mAP)
 
-        return loss/batch_idx, precision_eval, mAP
+        return loss / batch_idx, precision_eval, mAP
 
-    def save_parameters(self, check_path):
+    def save_parameters(self, checkpoint_path):
         """Save model checkpoint.
         Args:
-            check_path: path where to save the model checkpoint.
+            checkpoint_path: path where to save the model checkpoint.
         """
-        torch.save(self.state_dict(), check_path)
+        torch.save(self.state_dict(), checkpoint_path)
+        print(f"Saving model checkpoint in: {checkpoint_path}")
 
-    def load_parameters(self, check_path):
+    def load_parameters(self, checkpoint_path):
         """Load the model from a checkpoint.
         Args:
-            check_path: path to the checkpoint from where to load the model.
+            checkpoint_path: path to the checkpoint from where to load the model.
         """
         self_state = self.state_dict()
-        loaded_state = torch.load(check_path)
+        loaded_state = torch.load(checkpoint_path, map_location=torch.device(self.device))
         for name, param in loaded_state.items():
             orig_name = name;
             if name not in self_state:

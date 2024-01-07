@@ -1,9 +1,23 @@
 import torch
 import torch.nn as nn
 
-from modules.active_speaker_detection.talknet_asd.layers.audio_encoder import AudioEncoder
-from modules.active_speaker_detection.talknet_asd.layers.visual_encoder import VisualFrontend, VisualTCN, VisualConv1D
-from modules.active_speaker_detection.talknet_asd.layers.attention_layer import AttentionLayer
+# -- try-catch needed for the 'Fine-Tuning TalkNet-ASD' tutorial
+try:
+    from modules.active_speaker_detection.talknet_asd.layers.audio_encoder import AudioEncoder
+except ModuleNotFoundError:
+    from layers.audio_encoder import AudioEncoder
+
+# -- try-catch needed for the 'Fine-Tuning TalkNet-ASD' tutorial
+try:
+    from modules.active_speaker_detection.talknet_asd.layers.visual_encoder import VisualFrontend, VisualTCN, VisualConv1D
+except ModuleNotFoundError:
+    from layers.visual_encoder import VisualFrontend, VisualTCN, VisualConv1D
+
+# -- try-catch needed for the 'Fine-Tuning TalkNet-ASD' tutorial
+try:
+    from modules.active_speaker_detection.talknet_asd.layers.attention_layer import AttentionLayer
+except ModuleNotFoundError:
+    from layers.attention_layer import AttentionLayer
 
 class TalkNetArch(nn.Module):
     def __init__(self):
