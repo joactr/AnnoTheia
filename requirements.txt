@@ -11,3 +11,4 @@ python-vlc==3.0.20123
 customtkinter==5.2.1
 packaging==23.2
 CTkMessagebox==2.5
+colorama==0.4.6

@@ -2,7 +2,7 @@ imgs/
 mfccs/
 npz/
 exps/
-outputs/
+output/
 inputs/
 __pycache__/
 *.bat

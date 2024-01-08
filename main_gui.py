@@ -166,7 +166,7 @@ class Loader():
             # -- drawing face landmarks
             if len(face_landmarks) > 0:
                 landmarks = face_landmarks[n_frame]
-                frame_to_video = plot_landmarks(frame_to_video, landmarks)
+                plot_landmarks(frame_to_video, landmarks)
 
             # -- gathering frames to create the video clip
             video_frames.append(frame_to_video)

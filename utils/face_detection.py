@@ -73,7 +73,7 @@ def detect_multiple_faces(video_path, face_detector, face_aligner=None, min_face
 
                     multi_face_crops[pred_face].append( face_crops[face_idx] )
                     multi_face_boundings[pred_face].append( face_boundings[face_idx] )
-                    multi_face_landmarks[face_idx].append( face_landmarks[face_idx] )
+                    multi_face_landmarks[pred_face].append( face_landmarks[face_idx] )
                     multi_face_frames[pred_face].append( frame_count )
 
         ret, frame = cap.read()
