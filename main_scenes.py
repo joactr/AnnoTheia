@@ -1,9 +1,10 @@
-import warnings
+LM-201701-mp4.tgzimport warnings
 warnings.filterwarnings("ignore")
 
 import os
 import yaml
 import glob
+import shutil
 import argparse
 import pandas as pd
 from tqdm import tqdm
@@ -47,9 +48,7 @@ if __name__ == "__main__":
         os.makedirs(pickles_output_dir, exist_ok=True)
 
         # -- removing temporary files from the previous video that was processed
-        temp_files_to_remove = glob.glob(f"{temp_dir}/*")
-        for temp_filename_to_remove in temp_files_to_remove:
-            os.remove(temp_filename_to_remove)
+        shutil.rmtree(temp_dir)
 
         # -- processing video using the AnnoTheia's pipeline
         video_path = os.path.join(args.video_dir, video_filename)
