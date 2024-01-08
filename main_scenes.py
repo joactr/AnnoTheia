@@ -48,7 +48,7 @@ if __name__ == "__main__":
         os.makedirs(pickles_output_dir, exist_ok=True)
 
         # -- removing temporary files from the previous video that was processed
-        shutil.rmtree(temp_dir)
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
         # -- processing video using the AnnoTheia's pipeline
         video_path = os.path.join(args.video_dir, video_filename)

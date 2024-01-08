@@ -51,6 +51,7 @@ class TalkNetASD(AbsASD):
             face_crops,
             window_center=window_center,
             window_size=window_size,
+            total_video_frames=total_video_frames,
         ).unsqueeze(0)
 
         return acoustic_input, visual_input
@@ -96,7 +97,7 @@ class TalkNetASD(AbsASD):
         # -- if audio input is shorter, we pad the audio sequence
         if audio.shape[0] < max_audio_frames:
             pad_amount = max_audio_frames - audio.shape[0]
-            audio = np.pad(audio, ((0, pad_amount), (0, 0)), 'wrap')
+            audio = np.pad(audio, ((0,pad_amount), (0, 0)), 'wrap')
         # -- if audio input is longer, we discard last tokens
         audio = audio[:max_audio_frames, :]
 
@@ -133,15 +134,22 @@ class TalkNetASD(AbsASD):
             audio = F.pad(audio, (0, 0, 0, pad_amount), "constant", 0)
 
             # -- updating window boundings
-            ini = len(audio) - (window_size * 4)
+            ini = max(0, len(audio) - (window_size * 4))
 
         # -- window sampling
         audio = audio[ini:fin]
 
         return audio  # (T, 13)
 
-    def _padding_video(self, video, window_center, window_size):
+    def _padding_video(self, video, window_center, window_size, total_video_frames):
         n_side_frames = int((window_size-1)/2)
+
+        # -- if video input is shorter, we pad the video sequence
+        if video.shape[0] < total_video_frames:
+            pad_amount = total_video_frames - video.shape[0]
+            video = np.pad(video, ((0,pad_amount), (0,0), (0,0)), 'wrap')
+        # -- it should not happen
+        video = video[:total_video_frames, :]
 
         # -- convert to Torch tensor
         video = torch.FloatTensor(np.array(video))
@@ -167,7 +175,7 @@ class TalkNetASD(AbsASD):
             video = F.pad(video, (0, 0, 0, 0, 0, pad_amount), "constant", 0)
 
             # -- updating window boundings
-            ini = len(video)-(window_size)
+            ini = max(0, len(video)-(window_size))
 
         # -- window sampling
         video = video[ini:fin]
