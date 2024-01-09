@@ -13,6 +13,7 @@ import tkinter as tk
 from CTkMessagebox import CTkMessagebox
 
 from ibug.face_alignment.utils import plot_landmarks
+from utils.sound_player import play_sound_threaded
 
 # -- modes: "System" (standard), "Dark", "Light"
 customtkinter.set_appearance_mode("System")
@@ -281,6 +282,7 @@ class App(customtkinter.CTk):
             self.play_video()
 
     def save_sample(self):
+        play_sound_threaded(os.path.join("modules","sounds","correct.mp3"))
         # -- if file exists, append to it. If not, create new file
         if os.path.exists(self.output_file_path):
             # -- getting accepted sample
@@ -308,6 +310,7 @@ class App(customtkinter.CTk):
         self.next_sample()
 
     def delete_sample(self):
+        play_sound_threaded(os.path.join("modules","sounds","incorrect.mp3"))
         # -- perhaps this sample was previously accepted, so it has to be removed from the annotated dataframe
         annotated_df = pd.read_csv(self.output_file_path)
         sample_to_remove = self.loader.df.iloc[self.loader.index]
