@@ -93,8 +93,16 @@ class TalkNetASD(AbsASD):
     def _padding_audio(self, audio, label, window_center, window_size, total_video_frames):
         # -- computing the maximum number of frames for the audio cues assuming video data at 25 fps
         max_audio_frames = total_video_frames * 4
+        max_window_frames = window_size * 4
 
-        # -- if audio input is shorter, we pad the audio sequence
+        # -- if audio input is shorter than the future window size,
+        # (it can happen yes :S) we pad otherwise we will get a wronw output length
+        if audio.shape[0] < max_window_frames:
+            pad_amount = max_window_frames - audio.shape[0]
+            audio = np.pad(audio, ((0,pad_amount), (0, 0)), 'wrap')
+
+        # -- if audio input is shorter than the expected video length,
+        # we pad the audio sequence to allow alignment to videop
         if audio.shape[0] < max_audio_frames:
             pad_amount = max_audio_frames - audio.shape[0]
             audio = np.pad(audio, ((0,pad_amount), (0, 0)), 'wrap')
@@ -142,9 +150,16 @@ class TalkNetASD(AbsASD):
         return audio  # (T, 13)
 
     def _padding_video(self, video, window_center, window_size, total_video_frames):
+        video = np.asarray(video)
         n_side_frames = int((window_size-1)/2)
 
-        # -- if video input is shorter, we pad the video sequence
+        # -- if video input is shorter than the future window size,
+        # (it can happen yes :S) we pad otherwise we will get a wronw output length
+        if video.shape[0] < window_size:
+            pad_amount = window_size - video.shape[0]
+            video = np.pad(video, ((0,pad_amount), (0,0), (0,0)), 'wrap')
+
+        # -- if video shape is shorter than the expected video length
         if video.shape[0] < total_video_frames:
             pad_amount = total_video_frames - video.shape[0]
             video = np.pad(video, ((0,pad_amount), (0,0), (0,0)), 'wrap')
@@ -152,7 +167,7 @@ class TalkNetASD(AbsASD):
         video = video[:total_video_frames, :]
 
         # -- convert to Torch tensor
-        video = torch.FloatTensor(np.array(video))
+        video = torch.FloatTensor(video)
 
         video_frames = video.shape[0]
 

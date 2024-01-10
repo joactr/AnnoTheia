@@ -1,11 +1,7 @@
-rtve-data/
-imgs/
-mfccs/
-npz/
-exps/
 output/
-inputs/
-__pycache__/
+rtve-data/
+videos_to_process/
+
 *.bat
 *.wav
 *.mp4

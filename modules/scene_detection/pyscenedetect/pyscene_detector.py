@@ -40,7 +40,7 @@ class PySceneDetector(AbsSceneDetector):
         if len(scenes) == 0:
             scene_list = [(video_path, 0, check_video_duration(video_path))]
         else:
-            video_list = glob.glob(self.temp_dir+"/*")
+            video_list = sorted(glob.glob(self.temp_dir+"/*"))
             scene_list = [
                 (scene_path, timestamp[0].get_seconds(), timestamp[1].get_seconds())
                 for scene_path, timestamp in zip(video_list, scenes)

@@ -12,8 +12,9 @@ import customtkinter
 import tkinter as tk
 from CTkMessagebox import CTkMessagebox
 
+from utils.gui import play_sound_threaded
+
 from ibug.face_alignment.utils import plot_landmarks
-from utils.sound_player import play_sound_threaded
 
 # -- modes: "System" (standard), "Dark", "Light"
 customtkinter.set_appearance_mode("System")
@@ -149,12 +150,11 @@ class Loader():
         cap = cv2.VideoCapture(segment_path)
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        ini_frame = int( (row["ini"] - row["scene_start"]) * 25)
 
         video_frames = []
-        n_frame = ini_frame
+        n_frame = 0
         bb_color = (0, 255, 0)
-        final_frame = int( row["end"] * 25 )
+        final_frame = int( (row["end"] - row["ini"]) * 25 )
 
         # -- reading frame by frame
         while n_frame < final_frame:
@@ -178,24 +178,33 @@ class Loader():
             # -- sanity checking
             if ret == False:
                 break
-
         self.save_trimmed_video(video_frames, frame_width, frame_height, segment_path)
 
     def save_trimmed_video(self, video_frames, frame_width, frame_height, segment_path):
+        temp_path = f"{self.temp_dir}/temp.mp4"
+
+        # -- remove temporary video clips just in case
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
         # -- creating temporary video clip from the segment
-        video = cv2.VideoWriter(f"{self.temp_dir}/temp.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 25, (frame_width, frame_height))
+        video = cv2.VideoWriter(temp_path, cv2.VideoWriter_fourcc(*'mp4v'), 25, (frame_width, frame_height))
         # -- gathering all the video frame after drawings the bounding box and face landmarks
         for image in video_frames:
             video.write(image)
         cv2.destroyAllWindows()
         video.release()
 
+        # -- remove temporary video clips just in case
+        if os.path.exists(self.final_video_clip_path):
+            os.remove(self.final_video_clip_path)
+
         # -- adding sound to the silent video clip just created
         subprocess.call([
             "ffmpeg",
             "-y",
             "-i",
-            f"{self.temp_dir}/temp.mp4",
+            temp_path,
             "-i",
             segment_path,
             "-map",
@@ -213,6 +222,7 @@ class App(customtkinter.CTk):
     def __init__(self, scenes_info_path, output_file_path):
         super().__init__()
 
+        self.os_platform = platform.system()
         self.video_id = scenes_info_path.split(os.sep)[-2]
 
         ## -- defining different settings
@@ -265,11 +275,18 @@ class App(customtkinter.CTk):
         # -- adding transcription to the textbox
         self.textbox.insert("0.0", self.loader.df.iloc[self.loader.index]["transcription"])
 
+    def _play_sound_depending_on_platform(self, sound_filename):
+        sound_path = os.path.join("doc", "sounds", f"{sound_filename}.mp3")
+        if self.os_platform == "Windows":
+            play_sound_threaded(sound)
+        else:
+            os.system(f"mpg123 -q {sound_path}")
+
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
 
     def prev_sample(self):
-        self.loader.index = min(max(0, self.loader.index - 1), len(self.loader.df) - 1)
+        self.loader.index = max(0, self.loader.index - 1)
         self.play_video()
 
     def next_sample(self):
@@ -282,7 +299,8 @@ class App(customtkinter.CTk):
             self.play_video()
 
     def save_sample(self):
-        play_sound_threaded(os.path.join("modules","sounds","correct.mp3"))
+        self._play_sound_depending_on_platform("correct")
+
         # -- if file exists, append to it. If not, create new file
         if os.path.exists(self.output_file_path):
             # -- getting accepted sample
@@ -295,9 +313,6 @@ class App(customtkinter.CTk):
             annotated_df = pd.concat([annotated_df, accepted_sample], ignore_index=True).drop_duplicates()
             annotated_df.to_csv(self.output_file_path, index=False)
 
-            # -- updating dataframe into memory just in case the user come back to discard the sample :S
-            self.loader.df.iloc[self.loader.index]["transcription"] = self.textbox.get("0.0", "end").strip()
-
         else:
             # -- getting accepted sample
             first_accepted_sample = pd.DataFrame([self.loader.df.iloc[self.loader.index]])
@@ -306,11 +321,15 @@ class App(customtkinter.CTk):
             # -- creating annotated dataframe
             first_accepted_sample.to_csv(self.output_file_path, index=False)
 
+        # -- updating dataframe into memory just in case the user come back to discard the sample :S
+        self.loader.df.at[self.loader.index, "transcription"] = self.textbox.get("0.0", "end").strip()
+
         # -- get the next candidate scene
         self.next_sample()
 
     def delete_sample(self):
-        play_sound_threaded(os.path.join("modules","sounds","incorrect.mp3"))
+        self._play_sound_depending_on_platform("incorrect")
+
         # -- perhaps this sample was previously accepted, so it has to be removed from the annotated dataframe
         annotated_df = pd.read_csv(self.output_file_path)
         sample_to_remove = self.loader.df.iloc[self.loader.index]
@@ -323,11 +342,14 @@ class App(customtkinter.CTk):
             & (annotated_df["pickle_path"] == sample_to_remove["pickle_path"])
             & (annotated_df["transcription"] == sample_to_remove["transcription"])
         ].index)
+        annotated_df = annotated_df.reset_index(drop=True)
         annotated_df.to_csv(self.output_file_path, index=False)
 
         # -- removing the sample from the dataframe into memory
         self.loader.df = self.loader.df.drop(labels=self.loader.index, axis=0)
-        self.loader.index -= 1
+        self.loader.df = self.loader.df.reset_index(drop=True)
+
+        # -- it plays the next video without need for increasing the index
         self.play_video()
 
     def play_video(self):
@@ -349,6 +371,11 @@ class App(customtkinter.CTk):
             self.player.backward(self.final_video_clip_path, 1)
         if event.keysym == 'F3':
             self.player.forward(1)
+
+        if event.keysym == 'Left':
+            self.prev_sample()
+        if event.keysym == 'Right':
+            self.next_sample()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for supervising and annotating the candidate scenes provided by the AnnoTheia's Pipeline",

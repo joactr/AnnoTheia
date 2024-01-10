@@ -23,5 +23,9 @@ if __name__ == "__main__":
     os.system("pip install -e .")
     os.system("cd ../../..")
 
+    # -- installing package to play audios in linux
+    os.system("conda install conda-forge::mpg123")
+
     # -- installing the rest of needed packages
     os.system("pip install -r requirements.txt")
+
