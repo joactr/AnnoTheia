@@ -70,6 +70,7 @@ python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
 - **Collecting New Audio-Visual Databases.** Once it is compiled, it will be welcome to our [🦒 Database Zoo](#databasezoo)!
 - **Adding new alternative models to the pipeline's modules.** We prepared [another tutorial]() for you. And it might even be possible to add new modules, such as a body landmarker!
 - **Sharing the AnnoTheia's toolkit with your Colleagues.** The more, the merrier 💫!
+- **Any other comment or suggestion?** You are more than welcome to create an issue :)
 
 ### How many languages are we currently covering?
 
