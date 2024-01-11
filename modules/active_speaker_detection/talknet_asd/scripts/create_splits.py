@@ -78,7 +78,7 @@ def get_dataset_split(samples_per_speaker, n_samples):
 
         # -- adding new sample to the dataset split
         new_sample = (video_id, audio_id, label, window_center, video_path, audio_path)
-        if (new_sample not in dataset) and (new_sample[1] is not None)
+        if (new_sample not in dataset) and (new_sample[1] is not None):
             dataset.append(new_sample)
             repeat_type = False
             count = count + 1
@@ -92,7 +92,7 @@ def get_dataset_split(samples_per_speaker, n_samples):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create dataset splits for fine-tuning TalkNet-ASD to your language.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("--n-samples", default=100_000, type=int, help="Number of samples for the training dataset. Validation and test will have a 30% of them")
+    parser.add_argument("--n-samples", default=100_000, type=int, help="Number of samples for the training dataset. Validation and test will have a 30%% of them")
     parser.add_argument("--face-crops-dir", required=True, type=str, help="Directory where extracted face crops were stored")
     parser.add_argument("--mfccs-dir", required=True, type=str, help="Directory where MFCCs were stored")
     parser.add_argument("--output-dir", required=True, type=str, help="Directory where the resulting dataset split")
@@ -103,7 +103,12 @@ if __name__ == "__main__":
         dataset_dir = os.path.join(args.face_crops_dir, dataset)
         samples_per_speaker = get_samples_per_speaker(dataset_dir, args.face_crops_dir, args.mfccs_dir)
 
-        df_dataset = get_dataset_split(samples_per_speaker, args.n_samples)
+        if "train" in dataset:
+            df_dataset = get_dataset_split(samples_per_speaker, args.n_samples)
+        else:
+            # -- obtaining the 30% of samples w.r.t. the training split
+            notrain_n_samples = args.n_samples * 0.3
+            df_dataset = get_dataset_split(samples_per_speaker, notrain_n_samples)
 
         output_path = os.path.join(args.output_dir, f"{dataset}.csv")
         df_dataset.to_csv(output_path, index = False)

@@ -72,8 +72,10 @@ python ./scripts/extract_mfccs.py \
 - **Creating Window-Level Dataset Splits.** Using this script we will get the training, validation, and test dataset splits at window level we need to estimate our TalkNet-ASD model. Note that the ```--windows-per-sample``` refers to the number of windows we will consider for each video clip in the database.
 
 ```
-python ./scripts/create_window_dataset_splits.py \
+python ./scripts/create_splits.py \
+    --n-samples 100_000 \
     --face-crops-dir ./data/swahili/face_crops/ \
+    --mfccs-dir ./data/swahili/mfccs/ \
     --splits-output-dir ./data/swahili/splits/
 ```
 

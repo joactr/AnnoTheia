@@ -158,8 +158,8 @@ class AnnoTheiaPipeline(AbsPipeline):
             for speaker_id in asd_scores.keys():
                 # -- obtaining valid scenes where a person is actually speaking
                 # TODO: add implementatiton for the "red-valley" tolerance
-                for (start, end) in get_speaking(asd_labels[speaker_id], self.min_length, self.target_fps):
-                # for (start, end) in get_speaking_with_tolerance(asd_labels[speaker_id], self.min_length, self.min_length, self.target_fps):
+                # for (start, end) in get_speaking(asd_labels[speaker_id], self.min_length, self.target_fps):
+                for (start, end) in get_speaking_with_tolerance(asd_labels[speaker_id], self.min_length, 6, self.target_fps):
                     start_w, end_w = 0, 0
 
                     # -- alleviating in case of alignment mistakes by the ASR module

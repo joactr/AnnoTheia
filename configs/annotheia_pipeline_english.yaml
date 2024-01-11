@@ -1,32 +1,32 @@
 # -- scene detection
 scene_detection: pyscenedetect
 scene_detection_conf:
-  temp_dir: "./temp/"
+  temp_dir: "temp/"
 
 # -- face detection
 face_detection: retina
 face_detection_conf:
+  device: "cpu"
   threshold: 0.8
-  device: "cuda:0"
   model_id: "resnet50"
 
 # --face alignment
 face_alignment: fan
 face_alignment_conf:
-  device: "cuda:0"
+  device: "cpu"
   model_id: "2dfan2_alt"
 
 # -- active speaker detection
 active_speaker_detection: talknet
 active_speaker_detection_conf:
+  device: "cpu"
   checkpoint_path: "./modules/active_speaker_detection/talknet_asd/weights/english_talknetasd_ava_dataset.pth"
-  device: "cuda:0"
 
 # -- automatic speech recognition
 automatic_speech_recognition: whisper
 automatic_speech_recognition_conf:
   model_size: "small"
-  lang: "es"
+  lang: "en"
 
 pipeline: annotheia
 pipeline_conf:

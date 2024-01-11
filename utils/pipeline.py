@@ -86,68 +86,16 @@ def get_speaking(asd_labels, min_length, fps):
             pos_frames += 1
             # -- check if it is the end of a sequence
             if i == len(asd_labels) - 1 or asd_labels[i+1] == 0:
-                if i-prev_idx + 1 >= min_length:  # +1 because the sequence includes the current index
-                    # +1 because the sequence includes the current index
+                # -- we add +1 because the sequence includes the current index
+                if i-prev_idx + 1 >= min_length:
                     idx_list.append((prev_idx/fps, (i+1)/fps))
-                prev_idx = i + 1  # Move to the next index
+                # -- move to the next index
+                prev_idx = i + 1
         else:
             if i-prev_idx >= min_length:
                 idx_list.append((prev_idx/fps, i/fps))
-            prev_idx = i + 1  # Move to the next index
+            # -- move to the next index
+            prev_idx = i + 1
             pos_frames = 0
-
-    return idx_list
-
-def get_speaking_with_tolerance(asd_labels, min_length, tolerance, fps):
-    """Detects segments where a person is speaking according to the ASD module.
-    Args:
-      asd_labels (list): list containing for a specific speaker the thresholding over the frame-wise ASD scores of the scene.
-      min_length (int): minimum length in terms of frames to accept a scene as valid.
-      tolerance (int): integer representing the tolerance to non-speaking segments of length {tolerance}.
-      fps (int): frame per second rate to consider.
-    Returns:
-        [(start, end)]: list of tuples representing the timestamps where a person is speaking in the scene
-    """
-
-    if not isinstance(asd_labels, np.ndarray):
-        asd_labels = np.array(asd_labels)
-
-    comparison = asd_labels[:-1] != asd_labels[1:]
-
-    # -- computing indeces where there is change of values
-    change_idxs = np.where(comparison)[0] + 1
-    # -- adding sequence extremes
-    change_idxs = np.concatenate( ([0], change_idxs, [len(asd_labels)]) )
-
-    # -- detecting segments of N (tolerance) or more consecutive values, either 0's or 1's
-    change_diff = np.ediff1d(change_idxs)
-    segment_idxs = change_idxs[ np.argwhere(change_diff >= tolerance) ]
-    # -- we are only interested on those segments of 0's, where no active speaker is detected
-    # so we have the indeces where there is a segment of N or more 0's
-    valley_idxs = segment_idxs[ np.where(asd_labels[segment_idxs]==0)[0] ]
-
-    idx_list = []
-    previous_last_end = -1
-    for i, left_end_valley in enumerate(valley_idxs.flatten()):
-        # -- adding left side of valley
-        if i == 0:
-            left_start_valley = 0
-        else:
-            left_start_valley = segment_idxs[np.where(segment_idxs == left_end_valley)[0] - 1].flatten()[0]
-
-        if left_start_valley > previous_last_end:
-            idx_list.append( (left_start_valley/fps, left_end_valley/fps)  )
-
-        # -- adding right side of valley
-        aux_segment_idx = np.where(segment_idxs == left_end_valley)[0] + 1
-        if aux_segment_idx < len(segment_idxs):
-            right_start_valley = segment_idxs[np.where(segment_idxs == left_end_valley)[0] + 1].flatten()[0]
-            if i == (len(valley_idxs) - 1):
-                right_end_valley = len(asd_labels) - 1
-            else:
-                right_end_valley = valley_idxs.flatten()[i+1]
-
-            idx_list.append( (right_start_valley/fps, right_end_valley/fps)  )
-            previous_last_end = right_end_valley
 
     return idx_list
