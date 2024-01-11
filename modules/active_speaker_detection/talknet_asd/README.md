@@ -111,7 +111,7 @@ we  will fine-tune the pre-trained TalkNet-ASD for English, a model that was tra
     - Ask for the Pull Request.
 - **Create an Issue** in case of doubts. No worries :)
 
-## 🔭 Next Step
+## 🔭 Next Steps
 
 - **Compile a new audio-visual database for your language**
 - **Include it in our 🦒 Database Zoo Section**
