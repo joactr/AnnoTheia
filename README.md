@@ -66,8 +66,9 @@ python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
 
 <a href="https://www.nature.com/articles/s41559-021-01604-y">Many of the world’s languages are in danger of disappearing.</a> Our hope is to encourage the community to promote research in the field of audiovisual speech technologies for low-resource languages. It will be a long road but here we explain three ways to help our project:
 
-- **Fine-Tuning TalkNet-ASD for another Language.** Take a look at our [Fine-Tuning TalkNet-ASD to the Language I am Interested On](https://github.com/joactr/AnnoTheia/tree/david-branch/modules/active_speaker_detection/talknet_asd) tutorial 📜!
+- **Fine-Tuning TalkNet-ASD for another Language.** Take a look at our [tutorial](https://github.com/joactr/AnnoTheia/tree/david-branch/modules/active_speaker_detection/talknet_asd) tutorial 📜!
 - **Collecting New Audio-Visual Databases.** Once it is compiled, it will be welcome to our [🦒 Database Zoo](#databasezoo)!
+- **Adding new alternative models to the pipeline's modules.** We prepared [another tutorial]() for you. And it might even be possible to add new modules, such as a body landmarker!
 - **Sharing the AnnoTheia's toolkit with your Colleagues.** The more, the merrier 💫!
 
 ### How many languages are we currently covering?
