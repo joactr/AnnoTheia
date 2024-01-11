@@ -13,6 +13,7 @@
 [💕 How can I help?](#helping) |
 [🦒 Database Zoo](#databasezoo) |
 [📖 Citation](#citation) |
+[📝 License](#license) |
 [📝 License](#license)
 </div>
 
