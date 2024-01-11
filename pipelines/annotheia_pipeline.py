@@ -172,9 +172,9 @@ class AnnoTheiaPipeline(AbsPipeline):
                     # -- compiling useful information about the detected scenes
                     scene_info = {
                         "video": video_path,
-                        "scene_start": start_timestamp,
-                        "ini": start_timestamp+start,
-                        "end": start_timestamp+end,
+                        "start": start_timestamp + start,
+                        "end": start_timestamp + end,
+                        "duration": (start_timestamp + end) - (start_timestamp + start),
                         "speaker": speaker_id,
                         "pickle_path": pickle_output_path,
                         "transcription": "".join(words[start_w:(end_w+1)]),

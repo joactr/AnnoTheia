@@ -124,7 +124,7 @@ class Loader():
         face_landmarks = loaded["face_landmarks"][speaker_id]
 
         # -- trimming appropiate segment of the sample and converting it to 25fps
-        segment_path = os.path.join(self.temp_dir, f'{self.index}_{row["ini"]}_{row["end"]}.mp4')
+        segment_path = os.path.join(self.temp_dir, f'{self.index}_{row["start"]}_{row["end"]}.mp4')
 
         subprocess.call([
             "ffmpeg",
@@ -132,7 +132,7 @@ class Loader():
             "-i",
             str(row["video"]),
             "-ss",
-            str(row["ini"]),
+            str(row["start"]),
             "-to",
             str(row["end"]),
             "-c:v",
@@ -154,7 +154,7 @@ class Loader():
         video_frames = []
         n_frame = 0
         bb_color = (0, 255, 0)
-        final_frame = int( (row["end"] - row["ini"]) * 25 )
+        final_frame = int( (row["end"] - row["start"]) * 25 )
 
         # -- reading frame by frame
         while n_frame < final_frame:
@@ -335,9 +335,9 @@ class App(customtkinter.CTk):
         sample_to_remove = self.loader.df.iloc[self.loader.index]
         annotated_df = annotated_df.drop(index = annotated_df[
             (annotated_df["video"] == sample_to_remove["video"])
-            & (annotated_df["scene_start"] == sample_to_remove["scene_start"])
-            & (annotated_df["ini"] == sample_to_remove["ini"])
+            & (annotated_df["start"] == sample_to_remove["start"])
             & (annotated_df["end"] == sample_to_remove["end"])
+            & (annotated_df["duration"] == sample_to_remove["duration"])
             & (annotated_df["speaker"] == sample_to_remove["speaker"])
             & (annotated_df["pickle_path"] == sample_to_remove["pickle_path"])
             & (annotated_df["transcription"] == sample_to_remove["transcription"])

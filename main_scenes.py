@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
             # -- saving information w.r.t. the detected candidate scenes
             video_df_output_path = os.path.join(video_output_dir, "scenes_info.csv")
-            video_df = pd.DataFrame(scenes_info, columns=["video", "scene_start", "ini", "end", "speaker", "pickle_path", "transcription"])
+            video_df = pd.DataFrame(scenes_info, columns=["video", "start", "end", "duration", "speaker", "pickle_path", "transcription"])
             video_df.to_csv(video_df_output_path, index=False)
 
             cprint(f"\n\t(Pipeline) {video_filename} has been processed. What are you waiting for? Come on, you can annotate it!", "light_grey", attrs=["bold","reverse"])
