@@ -104,7 +104,7 @@ we  will fine-tune the pre-trained TalkNet-ASD for English, a model that was tra
 ## 💕 Share it!
 
 - **Do a Pull Request.** Different aspects to take into account:
-    - Upload your model checkpoint, e.g., in [Zenodo](https://zenodo.org/).
+    - Upload your model checkpoint, e.g., in [HuggingFace🤗](https://huggingface.co/) or [Zenodo](https://zenodo.org/).
     - Create a new config file for your language. You only will have to:
         - change [this line](https://github.com/joactr/AnnoTheia/blob/david-branch/configs/annotheia_pipeline_english.yaml#L22) specifying the new model checkpoint.
         - add a comment indicating the link where the future user can find and download the new model checkpoint.
