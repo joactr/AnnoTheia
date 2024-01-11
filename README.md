@@ -127,6 +127,6 @@ If you found our work useful, please cite our paper:
 ```
 
 ## <a name="license"></a> 📝 License
-This work is protected by Apache License 2.0. **HOWEVER, please note that use of the toolkit will always be limited by the license associated with the modules used in it.**
+- **License.** This work is protected by Apache License 2.0. **HOWEVER, please note that use of the toolkit will always be limited by the license associated with the modules used in it.**
 
 - **Ethical Considerations.** The toolkit we present can be used to collect and annotate audio-visual databases from social media where a person's face and voice are recorded. Both information cues could be considered as biometrics, raising privacy concerns regarding a person's identity. Therefore, any data collection must protect privacy rights, taking necessary measures and always asking all the people involved for permission beforehand.
