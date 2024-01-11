@@ -19,7 +19,7 @@ from utils.face_detection import detect_multiple_faces
 from utils.audio_processing import extract_wav_from_video
 from utils.video_processing import convert_video_to_target_fps, save_scene
 from utils.scene_detection import check_video_duration, get_suitable_scenes
-from utils.pipeline import non_overlap_sliding_strategy, get_speaking, get_speaking_with_tolerance
+from utils.pipeline import non_overlap_sliding_strategy, get_speaking
 
 class AnnoTheiaPipeline(AbsPipeline):
 
@@ -157,9 +157,7 @@ class AnnoTheiaPipeline(AbsPipeline):
             # -- aligning transcription for each scene
             for speaker_id in asd_scores.keys():
                 # -- obtaining valid scenes where a person is actually speaking
-                # TODO: add implementatiton for the "red-valley" tolerance
-                # for (start, end) in get_speaking(asd_labels[speaker_id], self.min_length, self.target_fps):
-                for (start, end) in get_speaking_with_tolerance(asd_labels[speaker_id], self.min_length, 6, self.target_fps):
+                for (start, end) in get_speaking(asd_labels[speaker_id], self.min_length, self.target_fps):
                     start_w, end_w = 0, 0
 
                     # -- alleviating in case of alignment mistakes by the ASR module
