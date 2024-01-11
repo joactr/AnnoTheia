@@ -113,8 +113,8 @@ we  will fine-tune the pre-trained TalkNet-ASD for English, a model that was tra
 
 ## 🔭 Next Steps
 
-- **Compile a new audio-visual database for your language**
-- **Include it in our 🦒 Database Zoo Section**
+- **Compile a new audio-visual database for your language.**
+- **Include it in our 🦒 Database Zoo Section.**
 
 ## 💢 Problems
 
