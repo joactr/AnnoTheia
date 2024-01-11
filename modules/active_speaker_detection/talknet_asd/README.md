@@ -1,6 +1,6 @@
 <h1 align="left"> 📜 Fine-Tuning TalkNet-ASD to the Language I am Interested On</h1>
 
-In this tutorial, we are goint to learn how to fine-tune the [TalkNet-ASD model](https://dl.acm.org/doi/abs/10.1145/3474085.3475587) to our language of interest. To do this, here you can find different tips regarding how we can collect data, as well as the code for data preparation, model training and its incorporation into the toolkit.
+In this tutorial, we are going to learn how to fine-tune the [TalkNet-ASD model](https://dl.acm.org/doi/abs/10.1145/3474085.3475587) to our language of interest. To do this, here you can find different tips regarding how we can collect data, as well as the code for data preparation, model training and its incorporation into the toolkit.
 
 ## 🦺 Conda Environment Setup
 
