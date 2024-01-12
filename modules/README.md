@@ -47,7 +47,7 @@ wget -O ./models/face_landmarker_v2_with_blendshapes.task -q https://storage.goo
 
 #### 3. Creating the Model Class
 
-Creating the `mediapipe_face_aligner.py` Python script inheriting the abstract class defined in [../abs_face_aligner.py](../abs_face_aligner.py):
+Creating an class for our model in the `mediapipe_face_aligner.py` script. Note that our face aligner will inherit the abstract class defined in [../abs_face_aligner.py](../abs_face_aligner.py):
 
 ```python
 
@@ -89,6 +89,7 @@ class MediaPipeFaceAligner(AbsFaceAligner):
             np.ndarray: array containing the detected facial landmarks (N,L,2),
           where N refers to number of faces and L to the number of detected landmarks.
         """
+
         # -- in this case, we do not need the face bounding boxes
         landmarks = self.face_aligner.detect(frame).face_landmarks
         return landmarks
@@ -104,4 +105,20 @@ from modules.face_alignment.mediapipe_face_aligner.mediapipe_face_aligner import
 
 #### 5. Adding the New Model to the Task
 
+Once our model has been created, we can come back to the root directory of the repository. Then, we will include our new model into the setting up of our [./tasks/detect_candidate_scenes_task.py](../tasks/detect_candidate_scenes_task.py) script:
+
+- Include it to allow its definition by means of the configuration file:
+
+```
+face_alignment_choices = ClassChoices(
+    name="face_alignment",
+    classes=dict(
+        fan=FANAligner,
+        mediapipe=Media
+    ),
+    type_check=AbsFaceAligner,
+    default=None,
+    optional=True
+)
+```
 
