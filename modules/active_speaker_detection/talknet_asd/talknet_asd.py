@@ -91,8 +91,9 @@ class TalkNetASD(AbsASD):
         return scores
 
     def _padding_audio(self, audio, label, window_center, window_size, total_video_frames):
+        original_audio = np.asarray(audio)
         # -- computing the maximum number of frames for the audio cues assuming video data at 25 fps
-        max_audio_frames = total_video_frames * 4
+        max_audio_frames = max(total_video_frames, window_size) * 4
         max_window_frames = window_size * 4
 
         # -- if audio input is shorter than the future window size,
@@ -150,6 +151,7 @@ class TalkNetASD(AbsASD):
         return audio  # (T, 13)
 
     def _padding_video(self, video, window_center, window_size, total_video_frames):
+        original_video = np.asarray(video)
         video = np.asarray(video)
         n_side_frames = int((window_size-1)/2)
 

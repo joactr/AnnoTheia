@@ -38,34 +38,33 @@ if __name__ == "__main__":
     videos_to_process = sorted( os.listdir(args.video_dir) )
     cprint(f"\n(Pipeline) Proccessing the {len(videos_to_process)} videos included in {args.output_dir}", "light_grey", attrs=["bold","reverse"])
     for video_filename in tqdm(videos_to_process, leave=False):
+        # -- getting a video ID
+        video_id = os.path.splitext(video_filename)[0]
+
         # -- creating output directories
-        video_output_dir = os.path.join(args.output_dir, video_filename.split(".")[0])
+        video_output_dir = os.path.join(args.output_dir, video_id)
 
-        if not os.path.isdir(video_output_dir):
-            if config.pipeline_conf["save_scenes"]:
-                scenes_output_dir = os.path.join(video_output_dir, "scenes")
-                os.makedirs(scenes_output_dir, exist_ok=True)
+        if config.pipeline_conf["save_scenes"]:
+            scenes_output_dir = os.path.join(video_output_dir, "scenes")
+            os.makedirs(scenes_output_dir, exist_ok=True)
 
-            pickles_output_dir = os.path.join(video_output_dir, "pickles")
-            os.makedirs(pickles_output_dir, exist_ok=True)
+        pickles_output_dir = os.path.join(video_output_dir, "pickles")
+        os.makedirs(pickles_output_dir, exist_ok=True)
 
-            # -- removing temporary files from the previous video that was processed
-            shutil.rmtree(temp_dir, ignore_errors=True)
+        # -- removing temporary files from the previous video that was processed
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
-            # -- processing video using the AnnoTheia's pipeline
-            video_path = os.path.join(args.video_dir, video_filename)
-            scenes_info = pipeline.process_video(video_path, video_output_dir)
+        # -- processing video using the AnnoTheia's pipeline
+        video_path = os.path.join(args.video_dir, video_filename)
+        scenes_info = pipeline.process_video(video_path, video_output_dir)
 
-            # -- saving information w.r.t. the detected candidate scenes
-            video_df_output_path = os.path.join(video_output_dir, "scenes_info.csv")
-            video_df = pd.DataFrame(scenes_info, columns=["video", "start", "end", "duration", "speaker", "pickle_path", "transcription"])
-            video_df.to_csv(video_df_output_path, index=False)
+        # -- saving information w.r.t. the detected candidate scenes
+        video_df_output_path = os.path.join(video_output_dir, f"{video_id}.csv")
+        video_df = pd.DataFrame(scenes_info, columns=["video", "start", "end", "duration", "speaker", "pickle_path", "transcription"])
+        video_df.to_csv(video_df_output_path, index=False)
 
-            cprint(f"\n\t(Pipeline) {video_filename} has been processed. What are you waiting for? Come on, you can annotate it!", "light_grey", attrs=["bold","reverse"])
-            cprint(f"\n\t(Pipeline) Check the candidate scenes in {video_df_output_path}\n", "light_grey", attrs=["bold","reverse"])
-
-        else:
-            cprint(f"\n\t(Pipeline) Video {video_filename} has been already processed. Skipping!\n", "light_grey", attrs=["bold","reverse"])
+        cprint(f"\n\t(Pipeline) {video_filename} has been processed. What are you waiting for? Come on, you can annotate it!", "light_grey", attrs=["bold","reverse"])
+        cprint(f"\n\t(Pipeline) Check the candidate scenes in {video_df_output_path}\n", "light_grey", attrs=["bold","reverse"])
 
     # -- removing temporary files from the previous video that was processed
     shutil.rmtree(temp_dir, ignore_errors=True)
