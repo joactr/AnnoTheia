@@ -4,4 +4,4 @@ In this tutorial, we are going to learn how to incorporate a new model into the 
 
 ## 🏗️ How is AnnoTheia structured?
 
-<div align="center"> <img src="../doc/image/annotheia_architecture.png"> </div>
+<div align="center"> <img src="../doc/image/annotheia_architecture.png" width=712> </div>
