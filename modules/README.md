@@ -17,3 +17,91 @@ First of all, it is advisable to know a little more about the toolkit and how it
 A question arises: **how is the flexibility that the toolkit offers in terms of changing or including a new model or module possible?** If you inspect this directory, you will see that for each module and for each model that can represent it, there is a folder. If you look again, you will see that in each module directory, there exists a script like `abs_{name_of_the_module}.py`. These scripts define the different **abstracts classes** we need to force your models to receive and output the data as the pipeline expects. By following these guidelines, regardless of which model you include, the pipeline will continue to work 🪄!
 
 ## 💪 Hands on!
+
+Imagine we want to incorporate the **face aligner** of [Google Mediapipe](https://developers.google.com/mediapipe/solutions/vision/face_landmarker) because we think it is a better option for our project, for example. Let's go step by step:
+
+#### 1. Placing our New Model
+
+In order to maintain the toolkit's structure, we will create the following directory as if we were at the root directory of the repository:
+
+```
+cd ./modules/face_alignment/
+mkdir ./mediapipe_face_aligner/
+cd ./mediapipe_face_aligner/
+```
+
+#### 2. Installation & Model Download
+
+According to the [MediaPipe's tutorial](https://github.com/googlesamples/mediapipe/blob/main/examples/face_landmarker/python/%5BMediaPipe_Python_Tasks%5D_Face_Landmarker.ipynb):
+
+- We will install MediaPipe:
+```
+pip install mediapipe
+```
+- We will download the off-the-shelf model bundle:
+
+```
+mkdir ./models/
+wget -O ./models/face_landmarker_v2_with_blendshapes.task -q https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
+```
+
+#### 3. Creating the Model Class
+
+Creating the `mediapipe_face_aligner.py` Python script inheriting the abstract class defined in [../abs_face_aligner.py](../abs_face_aligner.py):
+
+```python
+
+import mediapipe as mp
+from termcolor import cprint
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+from modules.face_alignment.abs_face_aligner import AbsFaceAligner
+
+class MediaPipeFaceAligner(AbsFaceAligner):
+    def __init__(self, model_asset_path="./models/face_landmarker_v2_with_blendshapes.task"):
+
+        # -- creating model configuration
+        base_options = python.BaseOptions(
+            model_asset_path=model_asset_path,
+        )
+
+        options = vision.FaceLandmarkerOptions(
+            base_options=base_options,
+            output_face_blendshapes=False,
+            output_facial_transformation_matrixes=False,
+        )
+
+        # -- building face aligner
+        self.face_aligner = vision.FaceLandmarker.create_from_options(options)
+
+        # -- printing useful information for the user
+        cprint(
+            f"\t(Face Alignment) MediaPipe Face Aligner loaded from ({model_asset_path})",
+            "cyan", attrs=["bold", "reverse"],
+        )
+
+    def detect_facial_landmarks(self, frame, face_bbs):
+        """Detect the facial landmarks of each face appearing on the frame.
+        Args:
+            frame (np.ndarray): a frame read from the scene clip.
+            face_bbs (np.ndarray): face bounding boxes provided by the face detector.
+        Returns:
+            np.ndarray: array containing the detected facial landmarks (N,L,2),
+          where N refers to number of faces and L to the number of detected landmarks.
+        """
+        # -- in this case, we do not need the face bounding boxes
+        landmarks = self.face_aligner.detect(frame).face_landmarks
+        return landmarks
+```
+
+#### 4. Importing Issues
+
+Just to make it easier to import this model in the future, we will include it in the [../\_\_init\_\_.py](../__init__.py):
+
+```
+from modules.face_alignment.mediapipe_face_aligner.mediapipe_face_aligner import MediaPipeFaceAligner
+```
+
+#### 5. Adding the New Model to the Task
+
+
