@@ -32,7 +32,7 @@ cd ./mediapipe_face_aligner/
 
 #### 2. Installation & Model Download
 
-According to the [MediaPipe's tutorial](https://github.com/googlesamples/mediapipe/blob/main/examples/face_landmarker/python/%5BMediaPipe_Python_Tasks%5D_Face_Landmarker.ipynb):
+According to the [MediaPipe's tutorial 📜](https://github.com/googlesamples/mediapipe/blob/main/examples/face_landmarker/python/%5BMediaPipe_Python_Tasks%5D_Face_Landmarker.ipynb):
 
 - We will install MediaPipe:
 ```
@@ -107,18 +107,41 @@ from modules.face_alignment.mediapipe_face_aligner.mediapipe_face_aligner import
 
 Once our model has been created, we can come back to the root directory of the repository. Then, we will include our new model into the setting up of our [./tasks/detect_candidate_scenes_task.py](../tasks/detect_candidate_scenes_task.py) script:
 
-- Include it to allow its definition by means of the configuration file:
+- First, include the `import` of the class
+
+```
+from modules.face_alignment import MediaPipeFaceAligner
+```
+
+- Then, include it here to allow it to be defined by means of the configuration file:
 
 ```
 face_alignment_choices = ClassChoices(
     name="face_alignment",
     classes=dict(
         fan=FANAligner,
-        mediapipe=Media
+        mediapipe=MediaPipeFaceAligner,
     ),
     type_check=AbsFaceAligner,
     default=None,
     optional=True
 )
 ```
+🌟 **Tip:** Inspect the code [here](https://github.com/joactr/AnnoTheia/blob/david-branch/tasks/detect_candidate_scenes_task.py#L90) to understand how the model is built and incorporated to the `AnnoTheiaPipeline` object. Of course, feel free to dive into our code 🤿! **Did you find out how to include a new module step (e.g., a body pose landmarker) into our toolkit?**
+
+#### 6. Update the Configuration File
+
+The last step is just updating or creating a new configuration file whose face aligner should be set up based on the previous class we defined. So, in the `./config/` directory, for example, in the [annotheia_pipeline_spanish.yaml](https://github.com/joactr/AnnoTheia/blob/david-branch/configs/annotheia_pipeline_spanish.yaml#L13C9-L13C9):
+
+```
+# --face alignment
+face_alignment: mediapipe
+face_alignment_conf:
+  model_asset_path="./models/face_landmarker_v2_with_blendshapes.task"
+```
+
+#### 7. [Optional] Face Plotting in the GUI
+
+🌟 Check the [MediaPipe's tutorial 📜](https://github.com/googlesamples/mediapipe/blob/main/examples/face_landmarker/python/%5BMediaPipe_Python_Tasks%5D_Face_Landmarker.ipynb) to replace [this line of code](https://github.com/joactr/AnnoTheia/blob/david-branch/main_gui.py#L170) with its corresponding function to plot and display the detected facial landmarks. Otherwise, you can comment that line.
+
 
