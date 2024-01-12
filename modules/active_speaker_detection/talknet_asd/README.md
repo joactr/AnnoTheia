@@ -118,5 +118,5 @@ we  will fine-tune the pre-trained TalkNet-ASD for English, a model that was tra
 
 ## 💢 Problems
 
-**What if, after all this effort, Whisper doesn't cover my language of interest?** Take it easy. Maybe another model will do it. For this reason, in [this tutorial 📜](), you can learn how to incorporate a new model into our AnnoTheia pipeline. In the worst scenario, where there is no model, it means that you have **the opportunity to present the first ASR model for your language** 🥇. You will just have to discard any automatic transcription from our toolkit and type the actual one before accepting the sample.
+**What if, after all this effort, Whisper doesn't cover my language of interest?** Take it easy. Maybe another model will do it. For this reason, in [this tutorial 📜](https://github.com/joactr/AnnoTheia/tree/david-branch/modules), you can learn how to incorporate a new model into our AnnoTheia pipeline. In the worst scenario, where there is no model, it means that you have **the opportunity to present the first ASR model for your language** 🥇. You will just have to discard any automatic transcription from our toolkit and type the actual one before accepting the sample.
 
