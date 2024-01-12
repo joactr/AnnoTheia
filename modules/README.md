@@ -5,3 +5,9 @@ In this tutorial, we are going to learn how to incorporate a new model into the 
 ## 🏗️ How is AnnoTheia structured?
 
 <div align="center"> <img src="../doc/image/annotheia_architecture.png" width=712> </div>
+
+First of all, it is advisable to know a little more about the tool and how it is organized:
+
+- The first thing we need is a [configuration file](../configs/annotheia_pipeline_spanish.yaml) defining the different settings to build each module composing the pipeline.
+- When running the [main_scenes.py](../main_scenes.py#L36) script, we create an instance of the DetectCandidateScenesTask object, defined in [detect_candidate_scenes_task.py](../tasks/detect_candidate_scenes_task.py#L77C7-L77C32). Concretely, this object will build and set up all the modules specified in the configuration file.
+- 
