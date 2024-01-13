@@ -172,10 +172,10 @@ class AnnoTheiaPipeline(AbsPipeline):
                         "video": video_path,
                         "start": start_timestamp + start,
                         "end": start_timestamp + end,
-                        "duration": (start_timestamp + end) - (start_timestamp + start),
+                        "duration": round((start_timestamp + end) - (start_timestamp + start), 2),
                         "speaker": speaker_id,
                         "pickle_path": pickle_output_path,
-                        "transcription": "".join(words[start_w:(end_w+1)]),
+                        "transcription": "".join(words[start_w:(end_w+1)]).strip(),
                     }
 
                     scenes_info.append(scene_info)
