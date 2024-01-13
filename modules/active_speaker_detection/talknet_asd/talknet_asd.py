@@ -91,7 +91,6 @@ class TalkNetASD(AbsASD):
         return scores
 
     def _padding_audio(self, audio, label, window_center, window_size, total_video_frames):
-        original_audio = np.asarray(audio)
         # -- computing the maximum number of frames for the audio cues assuming video data at 25 fps
         max_audio_frames = max(total_video_frames, window_size) * 4
         max_window_frames = window_size * 4
@@ -151,7 +150,6 @@ class TalkNetASD(AbsASD):
         return audio  # (T, 13)
 
     def _padding_video(self, video, window_center, window_size, total_video_frames):
-        original_video = np.asarray(video)
         video = np.asarray(video)
         n_side_frames = int((window_size-1)/2)
 
@@ -161,16 +159,8 @@ class TalkNetASD(AbsASD):
             pad_amount = window_size - video.shape[0]
             video = np.pad(video, ((0,pad_amount), (0,0), (0,0)), 'wrap')
 
-        # -- if video shape is shorter than the expected video length
-        if video.shape[0] < total_video_frames:
-            pad_amount = total_video_frames - video.shape[0]
-            video = np.pad(video, ((0,pad_amount), (0,0), (0,0)), 'wrap')
-        # -- it should not happen
-        video = video[:total_video_frames, :]
-
         # -- convert to Torch tensor
         video = torch.FloatTensor(video)
-
         video_frames = video.shape[0]
 
         # -- setting window boundings
@@ -188,7 +178,7 @@ class TalkNetASD(AbsASD):
 
         # -- padding at the end
         if window_center+n_side_frames >= video_frames:
-            pad_amount = (n_side_frames + window_center) - (video_frames + 1)
+            pad_amount = ((n_side_frames + window_center) - video_frames) + 1
             video = F.pad(video, (0, 0, 0, 0, 0, pad_amount), "constant", 0)
 
             # -- updating window boundings
