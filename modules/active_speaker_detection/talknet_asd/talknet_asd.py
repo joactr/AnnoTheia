@@ -138,7 +138,7 @@ class TalkNetASD(AbsASD):
 
         # -- padding at the end
         if (window_center + n_side_frames_audio + 4) >= audio_frames:
-            pad_amount = (n_side_frames_audio + window_center) - (audio_frames + 4)
+            pad_amount = ((n_side_frames_audio + window_center) - audio_frames) + 4
             audio = F.pad(audio, (0, 0, 0, pad_amount), "constant", 0)
 
             # -- updating window boundings
