@@ -54,7 +54,7 @@ def get_suitable_scenes(scenes_list, face_detector, face_max_frame):
             suitable = False
 
         # -- reading frame at position {face_max_frame}
-        cap.set(cv2.CAP_PROP_POS_FRAMES, face_max_frame - 1)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, min(frames, face_max_frame) - 1)
         ret, frame = cap.read()
 
         # -- if no face is detected
