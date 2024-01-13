@@ -64,7 +64,7 @@ if __name__ == "__main__":
         video_df.to_csv(video_df_output_path, index=False)
 
         cprint(f"\n\t(Pipeline) {video_filename} has been processed. What are you waiting for? Come on, you can annotate it!", "light_grey", attrs=["bold","reverse"])
-        cprint(f"\n\t(Pipeline) Check the candidate scenes in {video_df_output_path}\n", "light_grey", attrs=["bold","reverse"])
+        cprint(f"\t(Pipeline) Check the candidate scenes in {video_df_output_path}\n", "light_grey", attrs=["bold","reverse"])
 
     # -- removing temporary files from the previous video that was processed
     shutil.rmtree(temp_dir, ignore_errors=True)
