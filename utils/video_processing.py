@@ -24,6 +24,7 @@ def convert_video_to_target_fps(video_path, target_fps, temp_dir):
             "-i",
             video_path,
             "-r",
+            "25",
             output_path,
         ], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
