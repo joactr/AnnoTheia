@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     videos_to_process = sorted( os.listdir(args.video_dir) )
     cprint(f"\n(Pipeline) Proccessing the {len(videos_to_process)} videos included in {args.output_dir}", "light_grey", attrs=["bold","reverse"])
-    for video_filename in tqdm(videos_to_process, leave=False):
+    for video_filename in tqdm(videos_to_process, desc="Videos", leave=False):
         # -- getting a video ID
         video_id = os.path.splitext(video_filename)[0]
 
@@ -56,12 +56,14 @@ if __name__ == "__main__":
 
         # -- processing video using the AnnoTheia's pipeline
         video_path = os.path.join(args.video_dir, video_filename)
-        scenes_info = pipeline.process_video(video_path, video_output_dir)
-
-        # -- saving information w.r.t. the detected candidate scenes
         video_df_output_path = os.path.join(video_output_dir, f"{video_id}.csv")
-        video_df = pd.DataFrame(scenes_info, columns=["video", "start", "end", "duration", "speaker", "pickle_path", "transcription"])
-        video_df.to_csv(video_df_output_path, index=False)
+
+        # -- checking last scene processed in case you are reanuding the video processing
+        already_processed_scene_paths = []
+        if os.path.exists(video_df_output_path):
+            already_processed_scene_paths = pd.read_csv(video_df_output_path)["scene_path"].unique()
+
+        pipeline.process_video(video_path, video_output_dir, video_df_output_path, already_processed_scene_paths)
 
         cprint(f"\n\t(Pipeline) {video_filename} has been processed. What are you waiting for? Come on, you can annotate it!", "light_grey", attrs=["bold","reverse"])
         cprint(f"\t(Pipeline) Check the candidate scenes in {video_df_output_path}\n", "light_grey", attrs=["bold","reverse"])

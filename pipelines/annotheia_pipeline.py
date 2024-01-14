@@ -1,6 +1,8 @@
 import os
 import pickle
 import numpy as np
+import pandas as pd
+from tqdm import tqdm
 from typing import Optional
 from termcolor import cprint
 from collections import defaultdict
@@ -64,14 +66,14 @@ class AnnoTheiaPipeline(AbsPipeline):
         self.active_speaker_detection = active_speaker_detection
         self.automatic_speech_recognition = automatic_speech_recognition
 
-    def process_video(self, video_path, output_dir):
+    def process_video(self, video_path, output_dir, video_df_output_path, already_processed_scene_paths):
         """Process a video to detect the candidate scenes to compile a new audio-visual database.
         Args:
             video_path (str): path where the video clip is stored.
-        Returns:
-            [dict]: list of dictionaries representing all the useful information to save in the resulting DataFrame that will be saved in CSV format.
+            output_dir (str): directory where all the useful information will be stored.
+            video_df_output_path (str): path where the trimmed candidate scenes will be saved as CSV.
+            already_processed_scene_path (list): list containing the path of already processed scene paths.
         """
-        scenes_info = []
 
         # 1. Scene detection
         # 1.1. Splitting the video into scenes [(scene_path, start_timestamp, end_timestamp)]
@@ -81,7 +83,14 @@ class AnnoTheiaPipeline(AbsPipeline):
         scenes_list = get_suitable_scenes(scenes_list, self.face_detection, self.face_max_frame)
 
         # -- for each detected scene
-        for scene_path, start_timestamp, end_timestamp in scenes_list:
+        for i, (scene_path, start_timestamp, end_timestamp) in enumerate(scenes_list):
+
+            # -- discarding already processed scenes
+            if scene_path in already_processed_scene_paths:
+                cprint(f"\n\t(Pipeline) Scene {scene_path} was already processed in previous executions. Skipping it!\n", "light_grey", attrs=["bold","reverse"])
+                continue
+
+            cprint(f"\n\t(Pipeline) Processing scene {str(i).zfill(4)} of a total of {str(len(scenes_list)).zfill(4)} ...\n", "light_grey", attrs=["bold","reverse"])
 
             # 1.3. Converting each scene to 25 fps
             scene_duration = check_video_duration(scene_path)
@@ -126,7 +135,7 @@ class AnnoTheiaPipeline(AbsPipeline):
 
             # -- saving staff
             norm_scene_path = os.path.normpath(scene_path)
-            scene_id = str(norm_scene_path.split(os.sep)[-1])
+            scene_id = os.path.splitext(str(norm_scene_path.split(os.sep)[-1]))[0]
 
             if self.save_scenes:
                 scene_output_path = os.path.join(output_dir, "scenes", scene_id+".mp4")
@@ -155,6 +164,7 @@ class AnnoTheiaPipeline(AbsPipeline):
                     aligns.append( (word["start"], word["end"]) )
 
             # -- aligning transcription for each scene
+            scenes_info = []
             for speaker_id in asd_scores.keys():
                 # -- obtaining valid scenes where a person is actually speaking
                 for (start, end) in get_speaking(asd_labels[speaker_id], self.min_length, self.target_fps):
@@ -176,8 +186,10 @@ class AnnoTheiaPipeline(AbsPipeline):
                         "speaker": speaker_id,
                         "pickle_path": pickle_output_path,
                         "transcription": "".join(words[start_w:(end_w+1)]).strip(),
+                        "scene_path": scene_path, # -- just to control in case of reanuding a video processing
                     }
-
                     scenes_info.append(scene_info)
 
-        return scenes_info
+            # -- saving information w.r.t. the detected candidate scenes
+            video_df = pd.DataFrame(scenes_info, columns=["video", "start", "end", "duration", "speaker", "pickle_path", "transcription", "scene_path"])
+            video_df.to_csv(video_df_output_path, mode="a", index=False, header=not os.path.exists(video_df_output_path))
