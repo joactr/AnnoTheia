@@ -30,6 +30,12 @@
 
 ## <a name="preparation"></a> 🛠️ Preparation
 
+- Clone the repository:
+
+```
+git clone --branch david-branch --single-branch https://github.com/joactr/AnnoTheia.git
+```
+
 - Create and activate a new conda environment:
 
 ```
