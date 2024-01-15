@@ -331,26 +331,32 @@ class App(customtkinter.CTk):
         self._play_sound_depending_on_platform("incorrect")
 
         # -- perhaps this sample was previously accepted, so it has to be removed from the annotated dataframe
-        annotated_df = pd.read_csv(self.output_file_path)
-        sample_to_remove = self.loader.df.iloc[self.loader.index]
-        annotated_df = annotated_df.drop(index = annotated_df[
-            (annotated_df["video"] == sample_to_remove["video"])
-            & (annotated_df["start"] == sample_to_remove["start"])
-            & (annotated_df["end"] == sample_to_remove["end"])
-            & (annotated_df["duration"] == sample_to_remove["duration"])
-            & (annotated_df["speaker"] == sample_to_remove["speaker"])
-            & (annotated_df["pickle_path"] == sample_to_remove["pickle_path"])
-            & (annotated_df["transcription"] == sample_to_remove["transcription"])
-        ].index)
-        annotated_df = annotated_df.reset_index(drop=True)
-        annotated_df.to_csv(self.output_file_path, index=False)
+        if os.path.exists(self.output_file_path):
+            annotated_df = pd.read_csv(self.output_file_path)
+            sample_to_remove = self.loader.df.iloc[self.loader.index]
+            annotated_df = annotated_df.drop(index = annotated_df[
+                (annotated_df["video"] == sample_to_remove["video"])
+                & (annotated_df["start"] == sample_to_remove["start"])
+                & (annotated_df["end"] == sample_to_remove["end"])
+                & (annotated_df["duration"] == sample_to_remove["duration"])
+                & (annotated_df["speaker"] == sample_to_remove["speaker"])
+                & (annotated_df["pickle_path"] == sample_to_remove["pickle_path"])
+                & (annotated_df["transcription"] == sample_to_remove["transcription"])
+            ].index)
+            annotated_df = annotated_df.reset_index(drop=True)
+            annotated_df.to_csv(self.output_file_path, index=False)
 
         # -- removing the sample from the dataframe into memory
         self.loader.df = self.loader.df.drop(labels=self.loader.index, axis=0)
         self.loader.df = self.loader.df.reset_index(drop=True)
 
+        self.loader.index = min(self.loader.index, len(self.loader.df))
+
         # -- it plays the next video without need for increasing the index
-        self.play_video()
+        if len(self.loader.df) > 0:
+            self.play_video()
+        else:
+            CTkMessagebox(title=f"Congratulations!!", message=f"Video {self.video_id} has been annotated :) Please, close the GUI.",)()
 
     def play_video(self):
         # -- updating screen displaying a new sample
@@ -372,10 +378,10 @@ class App(customtkinter.CTk):
         if event.keysym == 'F3':
             self.player.forward(1)
 
-        if event.keysym == 'Left':
-            self.prev_sample()
-        if event.keysym == 'Right':
-            self.next_sample()
+        # if event.keysym == 'Left':
+        #     self.prev_sample()
+        # if event.keysym == 'Right':
+        #     self.next_sample()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for supervising and annotating the candidate scenes provided by the AnnoTheia's Pipeline",

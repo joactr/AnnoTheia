@@ -27,6 +27,9 @@ class PySceneDetector(AbsSceneDetector):
         # -- detecting scenes of the video
         scenes = detect(video_path, ContentDetector())
 
+        # -- split scenes longer than 60 seconds
+        scenes = self._split_long_scenes(scenes)
+
         num_scenes_to_print = len(scenes) if len(scenes) > 0 else 1
         cprint(f"\n\n\t(Scene Detection) Splitting {video_path} into {num_scenes_to_print} scenes...", "green", attrs=["bold", "reverse"])
 
@@ -47,3 +50,24 @@ class PySceneDetector(AbsSceneDetector):
             ]
 
         return scene_list
+
+    def _split_long_scenes(self, scenes, max_seconds=60):
+        """Split those scenes that are longer than {max_seconds} seconds just for computational resources limitations.
+        Args:
+            [(start_timestamp, end_timestamp): list of tuples representing the detected scenes.
+        Returns:
+            [(start_timestamp, end_timestamp): list of detected scenes where long ones were split.
+        """
+        split_scenes = []
+        for start_timestamp, end_timestamp in scenes:
+             scene_duration = end_timestamp - start_timestamp
+             if scene_duration > max_seconds:
+
+                 start_split = start_timestamp
+                 while start_split < end_timestamp:
+                     end_split = min(start_split+max_seconds, end_timestamp)
+                     split_scenes.append( (start_split, end_split)  )
+                     start_split = end_split
+
+             else:
+                 split_scenes.append( (start_timestamp, end_timestamp) )

@@ -59,11 +59,11 @@ if __name__ == "__main__":
         video_df_output_path = os.path.join(video_output_dir, f"{video_id}.csv")
 
         # -- checking last scene processed in case you are reanuding the video processing
-        already_processed_scene_paths = []
+        last_processed_scene_id = -1
         if os.path.exists(video_df_output_path):
-            already_processed_scene_paths = pd.read_csv(video_df_output_path)["scene_path"].unique()
+            last_processed_scene_id = int( pd.read_csv(video_df_output_path)["scene_path"].tolist()[-1].split(".")[0][-4:] )
 
-        pipeline.process_video(video_path, video_output_dir, video_df_output_path, already_processed_scene_paths)
+        pipeline.process_video(video_path, video_output_dir, video_df_output_path, last_processed_scene_id)
 
         cprint(f"\n\t(Pipeline) {video_filename} has been processed. What are you waiting for? Come on, you can annotate it!", "light_grey", attrs=["bold","reverse"])
         cprint(f"\t(Pipeline) Check the candidate scenes in {video_df_output_path}\n", "light_grey", attrs=["bold","reverse"])
