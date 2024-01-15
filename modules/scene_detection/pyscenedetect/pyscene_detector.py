@@ -71,3 +71,5 @@ class PySceneDetector(AbsSceneDetector):
 
              else:
                  split_scenes.append( (start_timestamp, end_timestamp) )
+
+        return split_scenes
