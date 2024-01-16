@@ -104,9 +104,14 @@ class Loader():
         self.temp_dir = temp_dir
         self.final_video_clip_path = final_video_clip_path
 
-        # -- creating temporary directory
+        # -- reading candidate scenes
         self.df = pd.read_csv(scenes_info_path)
+
+        # -- creating temporary directory
         os.makedirs(self.temp_dir, exist_ok=True)
+
+        # -- creating the annotated version
+        self.annotated_df = pd.DataFrame([], columns=["video", "start", "end", "duration", "speaker", "pickle_path", "transcription"])
 
         # -- displaying the video clip
         self.create_video()
@@ -219,21 +224,32 @@ class Loader():
         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 class App(customtkinter.CTk):
-    def __init__(self, scenes_info_path, output_file_path):
+    def __init__(self, scenes_info_path, output_file_path, max_history_len):
         super().__init__()
 
+        # -- setting up
         self.os_platform = platform.system()
         self.video_id = scenes_info_path.split(os.sep)[-2]
+        self.scenes_info_path = scenes_info_path
+
+        # -- history management
+        self.history = []
+        self.max_history_len = max_history_len
 
         ## -- defining different settings
         self.temp_dir = "./temp_gui"
         self.final_video_clip_path = os.path.join(self.temp_dir, "temp2.mp4")
         self.loader = Loader(scenes_info_path, temp_dir=self.temp_dir, final_video_clip_path=self.final_video_clip_path)
-        self.output_file_path = output_file_path
+
+        # -- just in case
+        if not os.path.exists(output_file_path):
+            self.output_file_path = output_file_path
+        else:
+            self.output_file_path = output_file_path.replace(".csv", "_annotated.csv")
 
         # -- configuring window
         self.geometry(f"{1200}x{720}")
-        self.title(f"AnnoTheia - Processing scene {self.loader.index+1} of {len(self.loader.df)}")
+        self.title(f"AnnoTheia - Processing scene {self.loader.index+1} of {len(self.loader.df)} from {self.scenes_info_path}")
 
         # -- configuring grid layout (4x4)
         self.grid_columnconfigure(0, weight=1)
@@ -268,6 +284,11 @@ class App(customtkinter.CTk):
         self.incorrect_button = customtkinter.CTkButton(master=self, fg_color="#edadad", border_width=2, text_color=("gray10", "#DCE4EE"), text="Incorrect", command=self.delete_sample)
         self.incorrect_button.grid(row=1, column=5, padx=(20, 20))
 
+        # -- defining 'undo' buttons
+        self.undo_button = customtkinter.CTkButton(master=self, fg_color="#5ea6ff", border_width=2, text_color=("gray10", "#DCE4EE"), text="Ups! Undo", command=self.undo)
+        self.undo_button.grid(row=2, column=5, padx=(20, 20))
+        self.undo_button._state = tk.DISABLED
+
         # -- drawing helping legend
         self.legend = customtkinter.CTkLabel(master=self, text="F1 - Play/Pause \nF2 - Rewind 5s \nF3 - Forward 5s", justify="left")
         self.legend.grid(row=4, column=5, padx=(20, 20), pady=(20, 0), sticky="w")
@@ -299,30 +320,38 @@ class App(customtkinter.CTk):
             self.play_video()
 
     def save_sample(self):
+        # -- acoustic user feedback
         self._play_sound_depending_on_platform("correct")
 
-        # -- if file exists, append to it. If not, create new file
-        if os.path.exists(self.output_file_path):
-            # -- getting accepted sample
-            accepted_sample = pd.DataFrame([self.loader.df.iloc[self.loader.index]])
-            # -- just in case, updating the supervised transcription
-            accepted_sample["transcription"] = self.textbox.get("0.0", "end").strip()
+        # -- add a new supervised sample to the annotated dataframe
+        accepted_sample = self.loader.df.iloc[self.loader.index]
+        accepted_sample = accepted_sample.drop(labels=["scene_path"]) # -- we do not need it
 
-            # -- updating annotated and supervised samples
-            annotated_df = pd.read_csv(self.output_file_path)
-            annotated_df = pd.concat([annotated_df, accepted_sample], ignore_index=True).drop_duplicates()
-            annotated_df.to_csv(self.output_file_path, index=False)
+        # -- updating transcription with the probable corrected one by the user
+        old_transcription = accepted_sample["transcription"]
+        accepted_sample["transcription"] = self.textbox.get("0.0", "end").strip()
 
-        else:
-            # -- getting accepted sample
-            first_accepted_sample = pd.DataFrame([self.loader.df.iloc[self.loader.index]])
-            # -- just in case, updating the supervised transcription
-            first_accepted_sample["transcription"] = self.textbox.get("0.0", "end").strip()
-            # -- creating annotated dataframe
-            first_accepted_sample.to_csv(self.output_file_path, index=False)
+        # -- appending the new accepted sample to the annotated dataframe
+        self.loader.annotated_df = pd.concat([
+            self.loader.annotated_df,
+            accepted_sample.to_frame().T,
+        ], ignore_index=True)
 
-        # -- updating dataframe into memory just in case the user come back to discard the sample :S
+        # -- updating the stored CSV file
+        self.loader.annotated_df.to_csv(self.output_file_path, index=False)
+
+        # -- updating non-annotated dataframe into memory just in case the user come back to discard the sample :S
         self.loader.df.at[self.loader.index, "transcription"] = self.textbox.get("0.0", "end").strip()
+
+        # -- updating the history to allow the user to come back to a previous stage
+        self.history.append( ("accepted_sample", accepted_sample, old_transcription, self.loader.index, None, None) )
+
+        # -- in case the button was disabled
+        self.undo_button._state = tk.NORMAL
+
+        # -- controlling its length just in case memory issues
+        if len(self.history) > self.max_history_len:
+            self.history.pop(0)
 
         # -- get the next candidate scene
         self.next_sample()
@@ -331,32 +360,114 @@ class App(customtkinter.CTk):
         self._play_sound_depending_on_platform("incorrect")
 
         # -- perhaps this sample was previously accepted, so it has to be removed from the annotated dataframe
-        if os.path.exists(self.output_file_path):
-            annotated_df = pd.read_csv(self.output_file_path)
-            sample_to_remove = self.loader.df.iloc[self.loader.index]
-            annotated_df = annotated_df.drop(index = annotated_df[
-                (annotated_df["video"] == sample_to_remove["video"])
-                & (annotated_df["start"] == sample_to_remove["start"])
-                & (annotated_df["end"] == sample_to_remove["end"])
-                & (annotated_df["duration"] == sample_to_remove["duration"])
-                & (annotated_df["speaker"] == sample_to_remove["speaker"])
-                & (annotated_df["pickle_path"] == sample_to_remove["pickle_path"])
-                & (annotated_df["transcription"] == sample_to_remove["transcription"])
-            ].index)
-            annotated_df = annotated_df.reset_index(drop=True)
-            annotated_df.to_csv(self.output_file_path, index=False)
+        sample_to_remove = self.loader.df.iloc[self.loader.index]
 
-        # -- removing the sample from the dataframe into memory
+        previous_annotated_len = len(self.loader.annotated_df)
+        annotated_remove_idx = self.loader.annotated_df[
+            (self.loader.annotated_df["video"] == sample_to_remove["video"])
+            & (self.loader.annotated_df["start"] == sample_to_remove["start"])
+            & (self.loader.annotated_df["end"] == sample_to_remove["end"])
+            & (self.loader.annotated_df["duration"] == sample_to_remove["duration"])
+            & (self.loader.annotated_df["speaker"] == sample_to_remove["speaker"])
+            & (self.loader.annotated_df["pickle_path"] == sample_to_remove["pickle_path"])
+            & (self.loader.annotated_df["transcription"] == sample_to_remove["transcription"])].index
+
+        self.loader.annotated_df = self.loader.annotated_df.drop(index=annotated_remove_idx)
+        self.loader.annotated_df = self.loader.annotated_df.reset_index(drop=True)
+
+        # -- necessary to recover a previous stage because of the 'undo' button
+        was_removed_from_annotated_df = len(self.loader.annotated_df) != previous_annotated_len
+
+        # -- updating the stored CSV file
+        self.loader.annotated_df.to_csv(self.output_file_path, index=False)
+
+        # -- removing the sample from the original dataframe into memory
         self.loader.df = self.loader.df.drop(labels=self.loader.index, axis=0)
         self.loader.df = self.loader.df.reset_index(drop=True)
 
-        self.loader.index = min(self.loader.index, len(self.loader.df))
+        # -- updating the history to allow the user to come back to a previous stage
+        self.history.append( ("deleted_sample", sample_to_remove, None, self.loader.index, was_removed_from_annotated_df, annotated_remove_idx) )
+
+        # -- in case the button was disabled
+        self.undo_button._state = tk.NORMAL
+
+        # -- controlling its length just in case memory issues
+        if len(self.history) > self.max_history_len:
+            self.history.pop(0)
 
         # -- it plays the next video without need for increasing the index
+        self.loader.index = min(self.loader.index, len(self.loader.df))
         if len(self.loader.df) > 0:
             self.play_video()
         else:
             CTkMessagebox(title=f"Congratulations!!", message=f"Video {self.video_id} has been annotated :) Please, close the GUI.",)()
+
+    def undo(self):
+        if len(self.history) > 0:
+            # -- taking the last user decision
+            decision_type, undo_sample, old_transcription, undo_loader_idx, was_removed_from_annotated_df, annotated_remove_idx = self.history.pop(-1)
+
+            # -- disable button if it the case
+            if len(self.history) == 0:
+                self.undo_button._state = tk.DISABLED
+
+            if decision_type == "accepted_sample":
+                # -- for the original dataframe into memory, it is just getting the old transcription
+                self.loader.df.at[undo_loader_idx, "transcription"] = old_transcription
+
+                # -- for the annotated dataframe, we have to remove the sample that we add
+                self.loader.annotated_df = self.loader.annotated_df.drop(index = self.loader.annotated_df[
+                        (self.loader.annotated_df["video"] == undo_sample["video"])
+                        & (self.loader.annotated_df["start"] == undo_sample["start"])
+                        & (self.loader.annotated_df["end"] == undo_sample["end"])
+                        & (self.loader.annotated_df["duration"] == undo_sample["duration"])
+                        & (self.loader.annotated_df["speaker"] == undo_sample["speaker"])
+                        & (self.loader.annotated_df["pickle_path"] == undo_sample["pickle_path"])
+                        & (self.loader.annotated_df["transcription"] == undo_sample["transcription"])
+                ].index)
+                self.loader.annotated_df = self.loader.annotated_df.reset_index(drop=True)
+
+                # -- and update the stored CSV file
+                self.loader.annotated_df.to_csv(self.output_file_path, index=False)
+
+            elif decision_type == "deleted_sample":
+                # -- for the original dataframe into memory, we have to add the sample that was removed
+                if undo_loader_idx > 0:
+                    self.loader.df = pd.concat([
+                        self.loader.df.loc[0:(undo_loader_idx-1)],
+                        undo_sample.to_frame().T,
+                        self.loader.df.loc[undo_loader_idx:],
+                    ], ignore_index=True)
+                else:
+                    self.loader.df = pd.concat([
+                        undo_sample.to_frame().T,
+                        self.loader.df,
+                    ], ignore_index=True)
+
+                # -- for the annotated dataframe, in case the sample was previosly accepted and consequently removed, we have to add it
+                if was_removed_from_annotated_df:
+                    annotated_remove_idx = annotated_remove_idx.values[0]
+                    if annotated_remove_idx > 0:
+                        self.loader.annotated_df = pd.concat([
+                            self.loader.annotated_df.loc[0:(annotated_remove_idx-1)],
+                            undo_sample.to_frame().T,
+                            self.loader.annotated_df.loc[annotated_remove_idx:],
+                        ], ignore_index=True)
+                    else:
+                        self.loader.annotated_df = pd.concat([
+                            undo_sample.to_frame().T,
+                            self.annotated_df,
+                        ])
+
+                    # -- and update the stored CSV file
+                    self.loader.annotated_df.to_csv(self.output_file_path, index=False)
+
+            # -- in both cases
+            # -- we have to update the loader dataframe index
+            self.loader.index = undo_loader_idx
+
+            # -- and play a video clip
+            self.play_video()
 
     def play_video(self):
         # -- updating screen displaying a new sample
@@ -367,7 +478,7 @@ class App(customtkinter.CTk):
         self.textbox.insert("0.0", self.loader.df.iloc[self.loader.index]["transcription"])
         self.player.play(self.final_video_clip_path)
 
-        app.title(f"AnnoTheia - Processing scene {self.loader.index+1} of {len(self.loader.df)}")
+        app.title(f"AnnoTheia - Processing scene {self.loader.index+1} of {len(self.loader.df)} from {self.scenes_info_path}")
 
     def keyword_func(self, event):
         # -- keyword shortages functionaly
@@ -378,17 +489,12 @@ class App(customtkinter.CTk):
         if event.keysym == 'F3':
             self.player.forward(1)
 
-        # if event.keysym == 'Left':
-        #     self.prev_sample()
-        # if event.keysym == 'Right':
-        #     self.next_sample()
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for supervising and annotating the candidate scenes provided by the AnnoTheia's Pipeline",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument("--scenes-info-path", required=True, type=str,
-                        help="Path to a CSV file where we can find the information w.r.t. the candidate scenes of a specific video.")
+    parser.add_argument("--scenes-info-path", required=True, type=str, help="Path to a CSV file where we can find the information w.r.t. the candidate scenes of a specific video.")
+    parser.add_argument("--max-history-len", default=100, type=int, help="Integer representing the user history annotation in order to allow the user to come back to a previous stage")
 
     args = parser.parse_args()
 
@@ -397,7 +503,7 @@ if __name__ == "__main__":
     output_csv = args.scenes_info_path[:extension_index] + '_annotated.csv'
 
     # -- starting the user interface
-    app = App(args.scenes_info_path, output_csv)
+    app = App(args.scenes_info_path, output_csv, args.max_history_len)
     app.bind("<KeyPress>", app.keyword_func)
     app.mainloop()
 
