@@ -1,10 +1,6 @@
 output/
 rtve-data/
 videos_to_process/
-output_meld_train/
-main_gui_meld.py
-output_meld_train.csv
-output_meld_train_annotated.csv
 
 *.bat
 *.wav
