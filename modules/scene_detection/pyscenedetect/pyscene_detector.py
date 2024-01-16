@@ -8,8 +8,9 @@ from scenedetect import detect, ContentDetector, split_video_ffmpeg
 from utils.scene_detection import check_video_duration
 
 class PySceneDetector(AbsSceneDetector):
-    def __init__(self, temp_dir = "./temp/"):
+    def __init__(self, fps=25, temp_dir = "./temp/"):
 
+        self.fps = fps
         self.temp_dir = temp_dir
         cprint(f"\t(Scene Detection) PySceneDetect initialized", "green", attrs=["bold", "reverse"])
 
@@ -59,13 +60,15 @@ class PySceneDetector(AbsSceneDetector):
             [(start_timestamp, end_timestamp): list of detected scenes where long ones were split.
         """
         split_scenes = []
+        max_frames = int(max_seconds * self.fps)
         for start_timestamp, end_timestamp in scenes:
-             scene_duration = end_timestamp - start_timestamp
-             if scene_duration > max_seconds:
+             scene_frames = end_timestamp - start_timestamp
+
+             if scene_frames > max_frames:
 
                  start_split = start_timestamp
                  while start_split < end_timestamp:
-                     end_split = min(start_split+max_seconds, end_timestamp)
+                     end_split = min(start_split+max_frames, end_timestamp)
                      split_scenes.append( (start_split, end_split)  )
                      start_split = end_split
 
