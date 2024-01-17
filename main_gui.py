@@ -285,7 +285,7 @@ class App(customtkinter.CTk):
         self.incorrect_button.grid(row=1, column=5, padx=(20, 20))
 
         # -- defining 'undo' buttons
-        self.undo_button = customtkinter.CTkButton(master=self, fg_color="#5ea6ff", border_width=2, text_color=("gray10", "#DCE4EE"), text="Ups! Undo", command=self.undo)
+        self.undo_button = customtkinter.CTkButton(master=self, fg_color="#5ea6ff", border_width=2, text_color=("gray10", "#DCE4EE"), text="Oops! Undo", command=self.undo)
         self.undo_button.grid(row=2, column=5, padx=(20, 20))
         self.undo_button._state = tk.DISABLED
 
