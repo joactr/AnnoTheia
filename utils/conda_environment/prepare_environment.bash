@@ -20,7 +20,10 @@ pip install -e .
 cd ../../..
 
 # -- installing package to play audios in linux
-conda install conda-forge::mpg123
+conda install conda-forge::mpg123 -y
+
+# -- installing ffmpeg package
+conda install -c conda-forge ffmpeg -y
 
 # -- installing the rest of needed packages
 pip install -r requirements.txt
