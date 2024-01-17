@@ -102,10 +102,11 @@ class Loader():
 
         self.index = 0
         self.temp_dir = temp_dir
+        self.scenes_info_path = scenes_info_path
         self.final_video_clip_path = final_video_clip_path
 
         # -- reading candidate scenes
-        self.df = pd.read_csv(scenes_info_path)
+        self.df = pd.read_csv(self.scenes_info_path)
 
         # -- creating temporary directory
         os.makedirs(self.temp_dir, exist_ok=True)
@@ -237,7 +238,7 @@ class App(customtkinter.CTk):
         self.max_history_len = max_history_len
 
         ## -- defining different settings
-        self.temp_dir = "./temp_gui"
+        self.temp_dir = "./temp_gui2"
         self.final_video_clip_path = os.path.join(self.temp_dir, "temp2.mp4")
         self.loader = Loader(scenes_info_path, temp_dir=self.temp_dir, final_video_clip_path=self.final_video_clip_path)
 
@@ -272,6 +273,9 @@ class App(customtkinter.CTk):
 
         self.next_button = customtkinter.CTkButton(master=self, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), text="Next", command=self.next_sample)
         self.next_button.grid(row=7, column=3, padx=(20, 20), pady=(20, 20), sticky="w")
+
+        self.save_button = customtkinter.CTkButton(master=self, fg_color="#adedbe", border_width=2, text_color=("gray10", "#DCE4EE"), text="Save", command=self.save_df)
+        self.save_button.grid(row=7, column=4, padx=(20, 20), pady=(20, 20), sticky="w")
 
         # -- creating textbox
         self.textbox = customtkinter.CTkTextbox(self, width=250)
@@ -318,6 +322,9 @@ class App(customtkinter.CTk):
         else:
             self.loader.index += 1
             self.play_video()
+
+    def save_df(self):
+        self.loader.df.to_csv(self.loader.scenes_info_path.replace(".csv", "_saved.csv"))
 
     def save_sample(self):
         # -- acoustic user feedback
