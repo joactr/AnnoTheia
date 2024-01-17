@@ -268,14 +268,20 @@ class App(customtkinter.CTk):
         self.player.play(self.final_video_clip_path)
 
         # -- defining 'prev' and 'next' buttons
+        self.jump_button = customtkinter.CTkButton(master=self, fg_color="#f7a80a", border_width=2, text_color=("gray10", "#DCE4EE"), text="Jump to:", command=self.jump_to)
+        self.jump_button.grid(row=7, column=0, padx=(20, 0), pady=(20, 20), sticky="w")
+
+        self.jumpto_textbox = customtkinter.CTkTextbox(self, width=100, height=25)
+        self.jumpto_textbox.grid(row=7, column=1, padx=(0, 0), pady=(20, 20), columnspan=1, sticky="w")
+
         self.prev_button = customtkinter.CTkButton(master=self, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), text="Prev", command=self.prev_sample)
-        self.prev_button.grid(row=7, column=2, padx=(20, 20), pady=(20, 20), sticky="e")
+        self.prev_button.grid(row=7, column=2, padx=(0, 20), pady=(20, 20), sticky="e")
 
         self.next_button = customtkinter.CTkButton(master=self, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), text="Next", command=self.next_sample)
         self.next_button.grid(row=7, column=3, padx=(20, 20), pady=(20, 20), sticky="w")
 
         self.save_button = customtkinter.CTkButton(master=self, fg_color="#adedbe", border_width=2, text_color=("gray10", "#DCE4EE"), text="Save", command=self.save_df)
-        self.save_button.grid(row=7, column=4, padx=(20, 20), pady=(20, 20), sticky="w")
+        self.save_button.grid(row=7, column=5, padx=(20, 20), pady=(20, 20), sticky="w")
 
         # -- creating textbox
         self.textbox = customtkinter.CTkTextbox(self, width=250)
@@ -310,6 +316,14 @@ class App(customtkinter.CTk):
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
 
+    def jump_to(self):
+        # -- minus one because the index in dataframes starts with zero
+        text_from_jumpto = self.jumpto_textbox.get("0.0", "end").strip()
+        if len(text_from_jumpto) > 0 and text_from_jumpto.isdigit():
+            user_idx = int(text_from_jumpto) - 1
+            self.loader.index = max(0, min(user_idx, len(self.loader.df)-1))
+            self.play_video()
+
     def prev_sample(self):
         self.loader.index = max(0, self.loader.index - 1)
         self.play_video()
@@ -325,6 +339,7 @@ class App(customtkinter.CTk):
 
     def save_df(self):
         self.loader.df.to_csv(self.loader.scenes_info_path.replace(".csv", "_saved.csv"))
+        CTkMessagebox(title=f"Success!!", message=f"Your annotation progress has been saved in {self.loader.scenes_info_path.replace('.csv', '_saved.csv')}!",)()
 
     def save_sample(self):
         # -- acoustic user feedback
@@ -495,6 +510,11 @@ class App(customtkinter.CTk):
             self.player.backward(self.final_video_clip_path, 1)
         if event.keysym == 'F3':
             self.player.forward(1)
+
+        # if event.keysym == "Return":
+        #     text_from_jumpto = self.jumpto_textbox.get("0.0", "end").strip()
+        #     if len(text_from_jumpto) > 0 and text_from_jumpto.isdigit():
+        #         self.jump_to()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for supervising and annotating the candidate scenes provided by the AnnoTheia's Pipeline",
