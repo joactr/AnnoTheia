@@ -98,11 +98,12 @@ class Screen(tk.Frame):
             self.player.set_time(newTime)
 
 class Loader():
-    def __init__(self, scenes_info_path, temp_dir, final_video_clip_path):
+    def __init__(self, scenes_info_path, annotated_output_path, temp_dir, final_video_clip_path):
 
         self.index = 0
         self.temp_dir = temp_dir
         self.scenes_info_path = scenes_info_path
+        self.annotated_output_path = annotated_output_path
         self.final_video_clip_path = final_video_clip_path
 
         # -- reading candidate scenes
@@ -112,7 +113,10 @@ class Loader():
         os.makedirs(self.temp_dir, exist_ok=True)
 
         # -- creating the annotated version
-        self.annotated_df = pd.DataFrame([], columns=["video", "start", "end", "duration", "speaker", "pickle_path", "transcription"])
+        if not os.path.exists(self.annotated_output_path):
+            self.annotated_df = pd.DataFrame([], columns=["video", "start", "end", "duration", "speaker", "pickle_path", "transcription"])
+        else:
+            self.annotated_df = pd.read_csv(self.annotated_output_path)
 
         # -- displaying the video clip
         self.create_video()
@@ -231,6 +235,7 @@ class App(customtkinter.CTk):
         # -- setting up
         self.os_platform = platform.system()
         self.video_id = scenes_info_path.split(os.sep)[-2]
+        self.output_file_path = output_file_path
         self.scenes_info_path = scenes_info_path
 
         # -- history management
@@ -240,13 +245,7 @@ class App(customtkinter.CTk):
         ## -- defining different settings
         self.temp_dir = "./temp_gui2"
         self.final_video_clip_path = os.path.join(self.temp_dir, "temp2.mp4")
-        self.loader = Loader(scenes_info_path, temp_dir=self.temp_dir, final_video_clip_path=self.final_video_clip_path)
-
-        # -- just in case
-        if not os.path.exists(output_file_path):
-            self.output_file_path = output_file_path
-        else:
-            self.output_file_path = output_file_path.replace(".csv", "_annotated.csv")
+        self.loader = Loader(scenes_info_path, annotated_output_path=self.output_file_path, temp_dir=self.temp_dir, final_video_clip_path=self.final_video_clip_path)
 
         # -- configuring window
         self.geometry(f"{1200}x{720}")
@@ -527,7 +526,7 @@ if __name__ == "__main__":
 
     # -- creating an annotated copy of the scene's info CSV
     extension_index = args.scenes_info_path.rfind('.csv')
-    output_csv = args.scenes_info_path[:extension_index] + '_annotated.csv'
+    output_csv = args.scenes_info_path[:extension_index].replace("_saved", "") + '_annotated.csv'
 
     # -- starting the user interface
     app = App(args.scenes_info_path, output_csv, args.max_history_len)
