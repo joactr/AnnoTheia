@@ -2,7 +2,7 @@
 
 In this tutorial, we are going to learn how to fine-tune a pre-trained [TalkNet-ASD model](https://dl.acm.org/doi/abs/10.1145/3474085.3475587) to our language of interest. To do this, here you can find different tips regarding how we can collect data, as well as the code for data preparation, model training and its incorporation into the toolkit.
 
-💫 **Kind Suggestion:** You can avoid this whole data collection and model training process by simply running AnnoTheia with, for example, the English ASD model and setting the decision threshold very low. It means that you will have more scenes to discard, but it can also be a good option!
+💫 **Kind Suggestion:** You can avoid this whole data collection and model training process by simply running AnnoTheia with, for example, the English ASD model and setting the decision threshold very low. You will have more scenes to discard, but it can also be a good option!
 
 ## 🦺 Conda Environment Setup
 
