@@ -114,7 +114,7 @@ class Loader():
 
         # -- creating the annotated version
         if not os.path.exists(self.annotated_output_path):
-            self.annotated_df = pd.DataFrame([], columns=["video", "start", "end", "duration", "speaker", "pickle_path", "transcription"])
+            self.annotated_df = pd.DataFrame([], columns=["video", "scene_start", "sample_start", "sample_end", "duration", "speaker", "pickle_path", "transcription"])
         else:
             self.annotated_df = pd.read_csv(self.annotated_output_path)
 
@@ -134,15 +134,15 @@ class Loader():
         face_landmarks = loaded["face_landmarks"][speaker_id]
 
         # -- trimming appropiate segment of the sample and converting it to 25fps
-        segment_path = os.path.join(self.temp_dir, f'{self.index}_{row["start"]}_{row["end"]}.mp4')
+        segment_path = os.path.join(self.temp_dir, f'{self.index}_{row["scene_start"]}_{row["sample_end"]}.mp4')
 
         subprocess.call([
             "ffmpeg",
             "-y",
             "-ss",
-            str(row["start"]),
+            str(row["scene_start"]),
             "-to",
-            str(row["end"]),
+            str(row["sample_end"]),
             "-i",
             str(row["video"]),
             "-c:v",
@@ -162,35 +162,58 @@ class Loader():
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         video_frames = []
-        n_frame = 0
         bb_color = (0, 255, 0)
-        final_frame = int( (row["end"] - row["start"]) * 25 )
+        start_frame = int( (row["sample_start"] - row["scene_start"]) * 25 )
+        final_frame = int( (row["sample_end"] - row["scene_start"]) * 25 )
 
         # -- reading frame by frame
-        while n_frame < final_frame:
+        n_frame = 0
+        while(cap.isOpened()):
             ret, image = cap.read()
 
-            # -- drawing face bounding box
-            left, top, right, bottom = face_boundings[n_frame]
-            frame_to_video = cv2.rectangle(image, (left, top), (right, bottom), bb_color, 1)
+            if ret == True:
+                if n_frame >= start_frame and n_frame <= final_frame:
+                    # -- drawing face bounding box
+                    left, top, right, bottom = face_boundings[n_frame]
+                    frame_to_video = cv2.rectangle(image, (left, top), (right, bottom), bb_color, 1)
 
-            # -- drawing face landmarks
-            if len(face_landmarks) > 0:
-                landmarks = face_landmarks[n_frame]
-                plot_landmarks(frame_to_video, landmarks)
+                    # -- drawing face landmarks
+                    if len(face_landmarks) > 0:
+                        landmarks = face_landmarks[n_frame]
+                        plot_landmarks(frame_to_video, landmarks)
 
-            # -- gathering frames to create the video clip
-            video_frames.append(frame_to_video)
+                    # -- gathering frames to create the video clip
+                    video_frames.append(frame_to_video)
 
-            # -- updating frame counter
-            n_frame += 1
+                # -- updating frame counter
+                n_frame += 1
 
-            # -- sanity checking
-            if ret == False:
+            else:
                 break
-        self.save_trimmed_video(video_frames, frame_width, frame_height, segment_path)
 
-    def save_trimmed_video(self, video_frames, frame_width, frame_height, segment_path):
+        # -- extracting adequately sampled audio stream
+        subprocess.call([
+            "ffmpeg",
+            "-y",
+            "-ss",
+            str(start_frame/25),
+            "-t",
+            str(row["duration"]),
+            "-i",
+            segment_path,
+            "-q:a",
+            "0",
+            "-map",
+            "a",
+            segment_path.replace(".mp4", ".aac"),
+            "-loglevel",
+            "quiet",
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+        self.save_trimmed_video(video_frames, frame_width, frame_height, segment_path.replace(".mp4", ".aac"))
+
+    def save_trimmed_video(self, video_frames, frame_width, frame_height, audio_segment_path):
         temp_path = f"{self.temp_dir}/temp.mp4"
 
         # -- remove temporary video clips just in case
@@ -216,15 +239,11 @@ class Loader():
             "-i",
             temp_path,
             "-i",
-            segment_path,
-            "-map",
-            "0:v",
-            "-map",
-            "1:a",
+            audio_segment_path,
             "-c:v",
             "copy",
             "-c:a",
-            "copy",
+            "aac",
             self.final_video_clip_path,
         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -386,8 +405,9 @@ class App(customtkinter.CTk):
         previous_annotated_len = len(self.loader.annotated_df)
         annotated_remove_idx = self.loader.annotated_df[
             (self.loader.annotated_df["video"] == sample_to_remove["video"])
-            & (self.loader.annotated_df["start"] == sample_to_remove["start"])
-            & (self.loader.annotated_df["end"] == sample_to_remove["end"])
+            & (self.loader.annotated_df["scene_start"] == sample_to_remove["scene_start"])
+            & (self.loader.annotated_df["sample_start"] == sample_to_remove["sample_start"])
+            & (self.loader.annotated_df["sample_end"] == sample_to_remove["sample_end"])
             & (self.loader.annotated_df["duration"] == sample_to_remove["duration"])
             & (self.loader.annotated_df["speaker"] == sample_to_remove["speaker"])
             & (self.loader.annotated_df["pickle_path"] == sample_to_remove["pickle_path"])
@@ -439,8 +459,9 @@ class App(customtkinter.CTk):
                 # -- for the annotated dataframe, we have to remove the sample that we add
                 self.loader.annotated_df = self.loader.annotated_df.drop(index = self.loader.annotated_df[
                         (self.loader.annotated_df["video"] == undo_sample["video"])
-                        & (self.loader.annotated_df["start"] == undo_sample["start"])
-                        & (self.loader.annotated_df["end"] == undo_sample["end"])
+                        & (self.loader.annotated_df["scene_start"] == undo_sample["scene_start"])
+                        & (self.loader.annotated_df["sample_start"] == undo_sample["sample_start"])
+                        & (self.loader.annotated_df["sample_end"] == undo_sample["sample_end"])
                         & (self.loader.annotated_df["duration"] == undo_sample["duration"])
                         & (self.loader.annotated_df["speaker"] == undo_sample["speaker"])
                         & (self.loader.annotated_df["pickle_path"] == undo_sample["pickle_path"])

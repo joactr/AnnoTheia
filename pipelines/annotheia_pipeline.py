@@ -84,7 +84,7 @@ class AnnoTheiaPipeline(AbsPipeline):
 
         # -- for each detected scene
         for i, (scene_path, start_timestamp, end_timestamp) in enumerate(scenes_list):
-            scene_id = int( scene_path.split(".")[0][-4:] )
+            scene_id = int( scene_path.split("-")[-1].split(".")[0] )
 
             # -- discarding already processed scenes
             if scene_id > last_processed_scene_id:
@@ -178,8 +178,9 @@ class AnnoTheiaPipeline(AbsPipeline):
                         # -- compiling useful information about the detected scenes
                         scene_info = {
                             "video": video_path,
-                            "start": start_timestamp + start,
-                            "end": start_timestamp + end,
+                            "scene_start": start_timestamp,
+                            "sample_start": start_timestamp + start,
+                            "sample_end": start_timestamp + end,
                             "duration": round((start_timestamp + end) - (start_timestamp + start), 2),
                             "speaker": speaker_id,
                             "pickle_path": pickle_output_path,
