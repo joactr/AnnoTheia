@@ -117,6 +117,7 @@ class Loader():
             self.annotated_df = pd.DataFrame([], columns=["video", "scene_start", "sample_start", "sample_end", "duration", "speaker", "pickle_path", "transcription"])
         else:
             self.annotated_df = pd.read_csv(self.annotated_output_path)
+            self.annotated_df = self.annotated_df.loc[:, ~self.annotated_df.columns.str.contains('^Unnamed')]
 
         # -- displaying the video clip
         self.create_video()
@@ -167,23 +168,23 @@ class Loader():
         final_frame = int( (row["sample_end"] - row["scene_start"]) * 25 )
 
         # -- reading frame by frame
-        n_frame = 0
-        while(cap.isOpened()):
+        n_frame = start_frame
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+        while(n_frame <= final_frame):
             ret, image = cap.read()
 
             if ret == True:
-                if n_frame >= start_frame and n_frame <= final_frame:
-                    # -- drawing face bounding box
-                    left, top, right, bottom = face_boundings[n_frame]
-                    frame_to_video = cv2.rectangle(image, (left, top), (right, bottom), bb_color, 1)
+                # -- drawing face bounding box
+                left, top, right, bottom = face_boundings[n_frame]
+                frame_to_video = cv2.rectangle(image, (left, top), (right, bottom), bb_color, 1)
 
-                    # -- drawing face landmarks
-                    if len(face_landmarks) > 0:
-                        landmarks = face_landmarks[n_frame]
-                        plot_landmarks(frame_to_video, landmarks)
+                # -- drawing face landmarks
+                if len(face_landmarks) > 0:
+                    landmarks = face_landmarks[n_frame]
+                    plot_landmarks(frame_to_video, landmarks)
 
-                    # -- gathering frames to create the video clip
-                    video_frames.append(frame_to_video)
+                # -- gathering frames to create the video clip
+                video_frames.append(frame_to_video)
 
                 # -- updating frame counter
                 n_frame += 1
@@ -356,6 +357,7 @@ class App(customtkinter.CTk):
             self.play_video()
 
     def save_df(self):
+        self.loader.df = self.loader.df.loc[:, ~self.loader.df.columns.str.contains('^Unnamed')]
         self.loader.df.to_csv(self.loader.scenes_info_path.replace(".csv", "_saved.csv"))
         CTkMessagebox(title=f"Success!!", message=f"Your annotation progress has been saved in {self.loader.scenes_info_path.replace('.csv', '_saved.csv')}!",)()
 
@@ -378,6 +380,7 @@ class App(customtkinter.CTk):
         ], ignore_index=True)
 
         # -- updating the stored CSV file
+        self.loader.annotated_df = self.loader.annotated_df.loc[:, ~self.loader.annotated_df.columns.str.contains('^Unnamed')]
         self.loader.annotated_df.to_csv(self.output_file_path, index=False)
 
         # -- updating non-annotated dataframe into memory just in case the user come back to discard the sample :S
@@ -420,6 +423,7 @@ class App(customtkinter.CTk):
         was_removed_from_annotated_df = len(self.loader.annotated_df) != previous_annotated_len
 
         # -- updating the stored CSV file
+        self.loader.annotated_df = self.loader.annotated_df.loc[:, ~self.loader.annotated_df.columns.str.contains('^Unnamed')]
         self.loader.annotated_df.to_csv(self.output_file_path, index=False)
 
         # -- removing the sample from the original dataframe into memory
@@ -470,6 +474,7 @@ class App(customtkinter.CTk):
                 self.loader.annotated_df = self.loader.annotated_df.reset_index(drop=True)
 
                 # -- and update the stored CSV file
+                self.loader.annotated_df = self.loader.annotated_df.loc[:, ~self.loader.annotated_df.columns.str.contains('^Unnamed')]
                 self.loader.annotated_df.to_csv(self.output_file_path, index=False)
 
             elif decision_type == "deleted_sample":
@@ -498,10 +503,11 @@ class App(customtkinter.CTk):
                     else:
                         self.loader.annotated_df = pd.concat([
                             undo_sample.to_frame().T,
-                            self.annotated_df,
+                            self.loader.annotated_df,
                         ])
 
                     # -- and update the stored CSV file
+                    self.loader.annotated_df = self.loader.annotated_df.loc[:, ~self.loader.annotated_df.columns.str.contains('^Unnamed')]
                     self.loader.annotated_df.to_csv(self.output_file_path, index=False)
 
             # -- in both cases

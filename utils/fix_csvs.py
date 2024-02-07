@@ -9,6 +9,8 @@ if __name__ == "__main__":
 
     program_ids = sorted( os.listdir(root_dir) )
     for program_id in tqdm(program_ids):
+        if program_id in ["LM-20170116","LM-20170119","LM-20170125"]:
+            continue
         program_csv_path = os.path.join(root_dir, program_id, program_id+".csv")
 
         new_df = []
