@@ -1,5 +1,7 @@
 output/
 rtve-data/
+temp/
+temp_gui2/
 videos_to_process/
 
 *.bat
