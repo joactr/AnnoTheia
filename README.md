@@ -124,7 +124,7 @@ If you found our work useful, please cite our paper:
 @inproceedings{acosta24annotheia,
   author="Acosta-Triana, José-Miguel and Gimeno-Gómez, David and Martínez-Hinarejos, Carlos-D",
   title="AnnoTheia: A Semi-Automatic Annotation Toolkit for Audio-Visual Speech Technologies",
-  booktitle="",
+  booktitle="LREC-COLING 2024",
   volume="",
   number="",
   pages="",
