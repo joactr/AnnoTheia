@@ -118,7 +118,7 @@ python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
 ## <a name="citation"></a> 📖 Citation
 If you found our work useful, please cite our paper:
 
-[AnnoTheia: A Semi-Automatic Annotation Toolkit for Audio-Visual Speech Technologies]()
+[AnnoTheia: A Semi-Automatic Annotation Toolkit for Audio-Visual Speech Technologies](http://arxiv.org/abs/2402.13152)
 
 ```
 @inproceedings{acosta24annotheia,
