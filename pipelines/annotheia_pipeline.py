@@ -143,6 +143,7 @@ class AnnoTheiaPipeline(AbsPipeline):
                 pickle_dict = {
                     "face_boundings": face_boundings,
                     "face_landmarks": face_landmarks,
+                    "asd_scores": asd_scores,
                     "asd_labels": asd_labels,
                     "transcription": transcription,
                 }
