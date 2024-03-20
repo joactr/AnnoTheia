@@ -39,6 +39,7 @@ git clone https://github.com/joactr/AnnoTheia.git
 - Create and activate a new conda environment:
 
 ```
+cd AnnoTheia
 conda create -y -n annotheia python=3.10
 conda activate annotheia
 ```
