@@ -131,6 +131,7 @@ class Loader():
             loaded = pickle.load(f)
 
         # -- getting face bounding boxes + face landmarks
+        asd_scores = [0.8] * 100000
         face_boundings = loaded["face_boundings"][speaker_id]
         face_landmarks = loaded["face_landmarks"][speaker_id]
 
@@ -164,6 +165,7 @@ class Loader():
 
         video_frames = []
         bb_color = (0, 255, 0)
+        conf_color = (139, 0, 0)
         start_frame = int( (row["sample_start"] - row["scene_start"]) * 25 )
         final_frame = int( (row["sample_end"] - row["scene_start"]) * 25 )
 
@@ -177,6 +179,10 @@ class Loader():
                 # -- drawing face bounding box
                 left, top, right, bottom = face_boundings[n_frame]
                 frame_to_video = cv2.rectangle(image, (left, top), (right, bottom), bb_color, 1)
+
+                # -- displaying frame-level confidence
+                if "asd_scores" in loaded.keys():
+                    cv2.putText(image, "{:.2f}".format(loaded["asd_scores"][n_frame]*100), (left, top-5), cv2.FONT_HERSHEY_SIMPLEX, 0.35, conf_color, 1)
 
                 # -- drawing face landmarks
                 if len(face_landmarks) > 0:

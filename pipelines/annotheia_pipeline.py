@@ -187,11 +187,12 @@ class AnnoTheiaPipeline(AbsPipeline):
                             "pickle_path": pickle_output_path,
                             "transcription": "".join(words[start_w:(end_w+1)]).strip(),
                             "scene_path": scene_path, # -- just to control in case of reanuding a video processing
+                            "avg_confidence": np.array(asd_scores[speaker_id]).mean(),
                         }
                         scenes_info.append(scene_info)
 
                 # -- saving information w.r.t. the detected candidate scenes
-                video_df = pd.DataFrame(scenes_info, columns=["video", "start", "end", "duration", "speaker", "pickle_path", "transcription", "scene_path"])
+                video_df = pd.DataFrame(scenes_info, columns=["video", "start", "end", "duration", "speaker", "pickle_path", "transcription", "scene_path", "avg_confidence"])
                 video_df.to_csv(video_df_output_path, mode="a", index=False, header=not os.path.exists(video_df_output_path))
 
             else:
