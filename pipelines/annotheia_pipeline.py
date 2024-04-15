@@ -192,7 +192,7 @@ class AnnoTheiaPipeline(AbsPipeline):
                         scenes_info.append(scene_info)
 
                 # -- saving information w.r.t. the detected candidate scenes
-                video_df = pd.DataFrame(scenes_info, columns=["video", "start", "end", "duration", "speaker", "pickle_path", "transcription", "scene_path", "avg_confidence"])
+                video_df = pd.DataFrame(scenes_info, columns=["video", "scene_start", "sample_start", "sample_end", "duration", "speaker", "pickle_path", "transcription", "scene_path", "avg_confidence"])
                 video_df.to_csv(video_df_output_path, mode="a", index=False, header=not os.path.exists(video_df_output_path))
 
             else:
