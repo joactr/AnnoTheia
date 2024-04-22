@@ -182,7 +182,7 @@ class Loader():
 
                 # -- displaying frame-level confidence
                 if "asd_scores" in loaded.keys():
-                    cv2.putText(image, "{:.2f}".format(loaded["asd_scores"][n_frame]*100), (left, top-5), cv2.FONT_HERSHEY_SIMPLEX, 0.35, conf_color, 1)
+                    cv2.putText(image, "{:.2f}".format(loaded["asd_scores"][speaker_id][n_frame]*100), (left, top-5), cv2.FONT_HERSHEY_SIMPLEX, 0.35, conf_color, 1)
 
                 # -- drawing face landmarks
                 if len(face_landmarks) > 0:
