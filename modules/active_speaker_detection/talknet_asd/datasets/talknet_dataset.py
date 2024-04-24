@@ -90,13 +90,14 @@ class TalkNetDataset(Dataset):
 
         return video # (T, 112, 112)
 
-    def __get_audio__(self, audioID, video_id, label, window_center):
+    def __get_audio__(self, index):
         sample = self.samples.iloc[index]
 
         # -- sample information
         audio_id = sample["audio_id"]
         label = sample["label"]
         window_center = sample["video_window_center"]
+        video_id = sample["video_id"]
 
         # -- input data path
         audio_path = sample["audio_path"]
@@ -112,9 +113,9 @@ class TalkNetDataset(Dataset):
         if label == 0:
 
             # -- and video and audio come from the same video clip ...
-            if audioID == video_id:
+            if audio_id == video_id:
                 # -- audio is randomly shifted to not be aligned to the video, checking that at most both windows overlap 50%
-                window_center = self._random_audio_window_with_no_overlap(window_center, int(audio_frames/4), self.n_side_frames, threshold=0.5)
+                window_center = self._random_audio_window_with_no_overlap(window_center, int(audio_frames/4), self.audio_n_side_frames, threshold=0.5)
 
             # -- and video and audio come from different video clips ...
             else:
