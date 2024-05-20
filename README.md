@@ -119,17 +119,15 @@ python main_gui.py --scenes-info-path ${PATH_TO_SCENES_INFO_CSV}
 ## <a name="citation"></a> 📖 Citation
 If you found our work useful, please cite our paper:
 
-[AnnoTheia: A Semi-Automatic Annotation Toolkit for Audio-Visual Speech Technologies](http://arxiv.org/abs/2402.13152)
+[AnnoTheia: A Semi-Automatic Annotation Toolkit for Audio-Visual Speech Technologies](https://aclanthology.org/2024.lrec-main.113/)
 
 ```
 @inproceedings{acosta24annotheia,
-  author="Acosta-Triana, José-Miguel and Gimeno-Gómez, David and Martínez-Hinarejos, Carlos-D",
-  title="AnnoTheia: A Semi-Automatic Annotation Toolkit for Audio-Visual Speech Technologies",
-  booktitle="The 2024 Joint International Conference on Computational Linguistics, Language Resources and Evaluation (LREC-COLING 2024)",
-  volume="",
-  number="",
-  pages="",
-  year="2024",
+  author={Acosta-Triana, José-M. and Gimeno-Gómez, David and Martínez-Hinarejos, Carlos-D},
+  title={{AnnoTheia: A Semi-Automatic Annotation Toolkit for Audio-Visual Speech Technologies}},
+  booktitle={{The 2024 Joint International Conference on Computational Linguistics, Language Resources and Evaluation (LREC-COLING 2024)}},
+  pages={1260--1269},
+  year={2024},
 }
 ```
 
