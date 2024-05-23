@@ -166,14 +166,14 @@ class TalkNetDataset(Dataset):
         overlapLeft = 1 - max(abs(video_center-0), 0) / window_size
         overlapRight = 1 - max(abs(video_center-video_frame_length), 0) / window_size
 
-        if overlapLeft > treshold:
+        if overlapLeft > threshold:
             fits_start = False
-        if overlapRight > treshold:
+        if overlapRight > threshold:
             fits_end = False
 
         if not fits_start and not fits_end:
-            min_padding_left = floor(video_center - (treshold*window_size))
-            min_padding_right = ceil(video_center + (treshold*window_size))
+            min_padding_left = floor(video_center - (threshold*window_size))
+            min_padding_right = ceil(video_center + (threshold*window_size))
 
             return random.choice([min_padding_left,min_padding_right])
 
@@ -181,7 +181,7 @@ class TalkNetDataset(Dataset):
         while overlap:
             index = random.randint(0, video_frame_length)
 
-            if (1 - max(abs(video_center-index), 0) / window_size) > treshold:
+            if (1 - max(abs(video_center-index), 0) / window_size) > threshold:
                 overlap = True
             if not overlap:
                 # -- assuming audio at 100fps and video at 25fps
