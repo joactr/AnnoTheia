@@ -4,7 +4,6 @@ temp/
 temp_gui2/
 videos_to_process/
 
-*.bat
 *.wav
 *.mp4
 *.zip
