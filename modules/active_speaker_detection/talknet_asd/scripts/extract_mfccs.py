@@ -1,15 +1,13 @@
 import os
-import joblib
 import argparse
 import subprocess
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
 
 import python_speech_features
 import scipy.io.wavfile as scipy_wavfile
 
-def process_wav(video_path):
+def process_wav(video_path, face_crop_path, output_path):
     # -- creating a temporary file containing the audio waveform
     subprocess.call([
         "ffmpeg",
@@ -21,7 +19,7 @@ def process_wav(video_path):
         "./temp.wav",
     ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,)
 
-    # -- laoding audio waveform
+    # -- loading audio waveform
     _, audio_waveform = scipy_wavfile.read("./temp.wav")
 
     # -- extracting MFCCs at 100fps
@@ -31,27 +29,27 @@ def process_wav(video_path):
         numcep=13,
         winlen=0.025,
         winstep=0.010,
-   )
+    )
 
-   # -- audiovisual temproral alignment
-   face_crops_seq = np.load(face_crop_path)["data"]
+    # -- audiovisual temporal alignment
+    face_crops_seq = np.load(face_crop_path)["data"]
 
-   # -- assuming video at 25fps and audio at 100fps
-   max_mfccs_length = face_crops_seq.shape[0] * 4
+    # -- assuming video at 25fps and audio at 100fps
+    max_mfccs_length = face_crops_seq.shape[0] * 4
 
-   # -- if it smaller, we apply padding
-   if mfccs.shape[0] < max_mfccs_length:
-       pad_amount = max_mfccs_length - mfccs.shape[0]
-       mfccs = np.pad(mfccs, ((0,pad_amount), (0,0)), 'wrap')
+    # -- if it smaller, we apply padding
+    if mfccs.shape[0] < max_mfccs_length:
+        pad_amount = max_mfccs_length - mfccs.shape[0]
+        mfccs = np.pad(mfccs, ((0,pad_amount), (0,0)), 'wrap')
 
-   # contrary, we cut the tail of the sequence
-   mfccs = mfccs[:max_mfccs_length, :]
+    # contrary, we cut the tail of the sequence
+    mfccs = mfccs[:max_mfccs_length, :]
 
-   # -- saving MFCCs in a compressed npz file
-   np.savez_compressed(output_path, data=np.array(mfccs))
+    # -- saving MFCCs in a compressed npz file
+    np.savez_compressed(output_path, data=np.array(mfccs))
 
-   # -- removing temporary file
-   os.remove("./temp.wav")
+    # -- removing temporary file
+    os.remove("./temp.wav")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extracting the 13-component MFCCs TalkNet-ASD is expecting.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -65,22 +63,24 @@ if __name__ == "__main__":
     os.makedirs(args.mfccs_output_dir, exist_ok=True)
 
     datasets = sorted(os.listdir(args.video_dir))
-    for dataset in tqdm(datasets, leave=False):
+    for dataset in tqdm(datasets, desc="Splits", unit="split"):
         output_dataset_dir = os.path.join(args.mfccs_output_dir, dataset)
         os.makedirs(output_dataset_dir, exist_ok=True)
 
         dataset_dir = os.path.join(args.video_dir, dataset)
         speakers = sorted(os.listdir(dataset_dir))
-        for speaker in tqdm(speakers, leave=False):
+        for speaker in tqdm(speakers, desc=f"Speakers in {dataset}", unit="speaker", leave=False):
             output_speaker_dir = os.path.join(output_dataset_dir, speaker)
             os.makedirs(output_speaker_dir, exist_ok=True)
 
             speaker_dir = os.path.join(dataset_dir, speaker)
             videos = sorted(os.listdir(speaker_dir))
-            for video in tqmd(videos):
+            for video in tqdm(videos, desc=f"Videos for {speaker}", unit="video", leave=False):
                 face_crop_path = os.path.join(args.face_crops_dir, dataset, speaker, video.split(".")[0]+".npz")
                 output_path = os.path.join(output_speaker_dir, video.split(".")[0]+".npz")
                 video_path = os.path.join(speaker_dir, video)
 
                 # -- processing video
-                process_video(video_path)
+                process_wav(video_path, face_crop_path, output_path)
+
+    print("MFCC extraction completed successfully!")
