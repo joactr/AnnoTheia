@@ -125,7 +125,7 @@ def calculate_precision_recall(df_merged):
 
 def run_evaluation(predictions):
   """Runs AVA Active Speaker evaluation, printing average precision result."""
-  column_names = ["uid", "video_id", "audio_id", "label", "video_window_center", "pred", "score"]
+  column_names = ["uid", "video_id", "audio_id", "label", "window_center", "pred", "score"]
   df_loaded = load_csv(
       predictions,
       column_names=column_names)

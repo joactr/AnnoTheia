@@ -85,7 +85,7 @@ python ./scripts/create_splits.py \
 
 <div align="center"> <img src="../../../doc/image/dataset_split.png"> </div>
 
-where each row corresponds to one window sample and the `video_window_center` column indicates the index in the face crop sequence where the center of the window sample will be. Depending on the `label`, we will have **positive** or **negative** samples. Find below an image explaining the four different types of window samples we designed. Of course, you can find more information [in our paper 📃]().
+where each row corresponds to one window sample and the `window_center` column indicates the index in the face crop sequence where the center of the window sample will be. Depending on the `label`, we will have **positive** or **negative** samples. Find below an image explaining the four different types of window samples we designed. Of course, you can find more information [in our paper 📃]().
 
 <div align="center"> <img src="../../../doc/image/window_sampling_annotheia.png" width=712> </div>
 

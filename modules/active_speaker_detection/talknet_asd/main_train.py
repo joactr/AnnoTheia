@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
 
     # -- building and pre-training the TalkNet-ASD model
-    talknet_asd = TalkNetModel(**vars(args)); print(talknet_asd)
+    talknet_asd = TalkNetModel(**vars(args));
     print(f"\nLoading TalkNet-ASD from checkpoint: {args.load_model}\n")
     talknet_asd.load_parameters(args.load_model)
 

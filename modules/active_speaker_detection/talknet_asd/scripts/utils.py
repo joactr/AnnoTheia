@@ -1,6 +1,4 @@
-import os
 import cv2
-import pickle
 import numpy as np
 
 def load_video(video_path):

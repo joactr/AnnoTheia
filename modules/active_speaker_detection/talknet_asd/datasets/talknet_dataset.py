@@ -33,7 +33,6 @@ class TalkNetDataset(Dataset):
         # -- model input data
         audio = self.__get_audio__(index)
         video = self.__get_video__(index)
-
         # -- target labels
         labels = self.__get_labels__(index)
 
@@ -52,11 +51,7 @@ class TalkNetDataset(Dataset):
 
     def __get_video__(self, index):
         sample = self.samples.iloc[index]
-
-        # -- sample information
-        video_id = sample["video_id"]
-        label = sample["label"]
-        window_center = sample["video_window_center"]
+        window_center = sample["window_center"]
 
         # -- input data path
         video_path = sample["video_path"]
@@ -96,13 +91,14 @@ class TalkNetDataset(Dataset):
         # -- sample information
         audio_id = sample["audio_id"]
         label = sample["label"]
-        window_center = sample["video_window_center"]
+        window_center = sample["window_center"]
         video_id = sample["video_id"]
-
+        
         # -- input data path
         audio_path = sample["audio_path"]
         np_audio = np.load(audio_path)["data"]
         audio = torch.FloatTensor(np_audio)
+        audio_frames = audio.shape[0]
 
         # -- if the sample is positive ...
         if label == 1:
@@ -123,7 +119,6 @@ class TalkNetDataset(Dataset):
                 window_center = random.randint(0, len(audio))
 
         # -- obtaining window sample
-        audio_frames = audio.shape[0]
         ini = window_center - self.audio_n_side_frames
         fin = window_center + self.audio_n_side_frames + 4
 
@@ -150,16 +145,6 @@ class TalkNetDataset(Dataset):
         return audio # (T, 13)
 
     def _random_audio_window_with_no_overlap(self, video_center, video_frame_length, n_side_frames, threshold):
-        """Looks for an index where the center of an audio window is not overlapping with the existing video window,
-          returning, the index of the center of the window, or the minimum padding center in case there is no index in which they do not overlap.
-        Args:
-            video_center: index indicating the center of the window sample.
-            video_frame_length: length of the video in terms of frames.
-            n_side_frames (int): number of frames on each side of the window.
-            threshold (float): value between 0 and 1, representing the maximum percentage of overlapping allowed.
-        Returns:
-            (int): index of the new audio window no overlapping with the video window
-        """
         window_size = (n_side_frames * 2) + 1
         fits_start, fits_end = True, True
 
@@ -174,17 +159,14 @@ class TalkNetDataset(Dataset):
         if not fits_start and not fits_end:
             min_padding_left = floor(video_center - (threshold*window_size))
             min_padding_right = ceil(video_center + (threshold*window_size))
+            return random.choice([min_padding_left, min_padding_right]) * 4
 
-            return random.choice([min_padding_left,min_padding_right])
-
-        overlap = False
-        while overlap:
+        max_attempts = 100
+        for _ in range(max_attempts):
             index = random.randint(0, video_frame_length)
+            if (1 - max(abs(video_center-index), 0) / window_size) <= threshold:
+                return index * 4
 
-            if (1 - max(abs(video_center-index), 0) / window_size) > threshold:
-                overlap = True
-            if not overlap:
-                # -- assuming audio at 100fps and video at 25fps
-                return index*4
-
-
+        # If no suitable index found, return one of the padding values
+        return random.choice([floor(video_center - (threshold*window_size)), 
+                            ceil(video_center + (threshold*window_size))]) * 4
